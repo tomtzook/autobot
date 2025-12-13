@@ -4,39 +4,39 @@
 namespace autobot::math {
 
 dc_motor::dc_motor(
-        const floating_type nominal_voltage_volts,
-        const floating_type stall_torque_newton_meters,
-        const floating_type stall_current_amps,
-        const floating_type free_current_amps,
-        const floating_type free_speed_rad_per_sec)
-     : nominal_voltage_volts(nominal_voltage_volts)
-     , stall_torque_newton_meters(stall_torque_newton_meters)
-     , stall_current_amps(stall_current_amps)
-     , freeCurrentAmps(free_current_amps)
-     , free_speed_rad_per_sec(free_speed_rad_per_sec)
-     , kt_nm_per_amp(stall_torque_newton_meters / stall_current_amps)
-     , r_ohms(nominal_voltage_volts / stall_current_amps)
-     , kv_rad_per_sec_per_volt(free_speed_rad_per_sec / (nominal_voltage_volts - r_ohms * free_current_amps))
+    const units::volts nominal_voltage,
+    const units::newton_meter stall_torque,
+    const units::amps stall_current,
+    const units::amps free_current,
+    const units::radians_per_second free_speed)
+     : nominal_voltage(nominal_voltage)
+     , stall_torque(stall_torque)
+     , stall_current(stall_current)
+     , free_current(free_current)
+     , free_speed(free_speed)
+     , motor_kt(stall_torque / stall_current)
+     , resistence(nominal_voltage / stall_current)
+     , motor_kv(free_speed / (nominal_voltage - resistence * free_current))
 {}
 
-floating_type dc_motor::kv(const floating_type gearing) const {
-    return gearing / kv_rad_per_sec_per_volt;
+units::volts_per_rad_per_sec dc_motor::kv(const floating_type gearing) const {
+    return units::volts_per_rad_per_sec(gearing / motor_kv.value());
 }
 
-floating_type dc_motor::ka(const floating_type gearing, const floating_type moment_of_inertia) const {
-    return (r_ohms * moment_of_inertia) / (gearing * kt_nm_per_amp);
+units::volts_per_rad_per_sec_per_sec dc_motor::ka(const floating_type gearing, const units::jkg_meters_squared moment_of_inertia) const {
+    return units::volts_per_rad_per_sec_per_sec((resistence.value() * moment_of_inertia.value()) / (gearing * motor_kt.value()));
 }
 
-dc_motor_system::dc_motor_system(const type kv, const type ka)
+dc_motor_system::dc_motor_system(const units::volts_per_rad_per_sec kv, const units::volts_per_rad_per_sec_per_sec ka)
     : state_spaced_system(
-        matrix2f{{0, 1}, {0, -kv / ka}},
-        vector2f{0, 1 / ka},
+        matrix2f{{0, 1}, {0, -kv.value() / ka.value()}},
+        vector2f{0, 1 / ka.value()},
         matrix2f{{1, 0}, {0, 1}},
         vector2f{0, 0}
     )
 {}
 
-dc_motor_system::dc_motor_system(const dc_motor& motor, const type moment_of_inertia, const type gearing)
+dc_motor_system::dc_motor_system(const dc_motor& motor, const units::jkg_meters_squared moment_of_inertia, const type gearing)
     : dc_motor_system(motor.kv(gearing), motor.ka(gearing, moment_of_inertia))
 {}
 

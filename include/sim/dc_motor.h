@@ -1,20 +1,21 @@
 #pragma once
 
 #include "math/plant/dc_motor.h"
+#include "units.h"
 
 namespace autobot::sim {
 
 class dc_motor {
 public:
-    dc_motor(math::floating_type kv, math::floating_type ka);
-    dc_motor(const math::dc_motor& motor, math::floating_type moment_of_inertia, math::floating_type gearing);
+    dc_motor(units::volts_per_rad_per_sec kv, units::volts_per_rad_per_sec_per_sec ka);
+    dc_motor(const math::dc_motor& motor, units::jkg_meters_squared moment_of_inertia, math::floating_type gearing);
 
-    void input_voltage(math::floating_type volts);
+    void input_voltage(units::volts volts);
 
-    [[nodiscard]] math::floating_type output_position() const;
-    [[nodiscard]] math::floating_type output_velocity() const;
+    [[nodiscard]] units::radians output_position() const;
+    [[nodiscard]] units::radians_per_second output_velocity() const;
 
-    void update(math::floating_type dt);
+    void update(units::seconds dt);
 
 private:
     math::dc_motor_plant m_plant;

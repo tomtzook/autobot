@@ -18,6 +18,7 @@ set(SOURCES
         include/math/plant/dc_motor.h
         include/math/control/pid.h
         include/sim/dc_motor.h
+        include/units.h
 
         src/math/plant/dc_motor.cpp
         src/sim/dc_motor.cpp
@@ -42,3 +43,6 @@ install(EXPORT autobot
         FILE autobotConfig.cmake
         NAMESPACE autobot::
         DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/autobot")
+
+add_executable(test test.cpp)
+target_link_libraries(test autobot)
