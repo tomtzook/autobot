@@ -7,6 +7,18 @@
 namespace autobot::math {
 
 template<units::unit_type unit_>
+constexpr units::measure<unit_> constrain(const units::measure<unit_>& value, const units::measure<unit_>& min, const units::measure<unit_>& max) {
+    if (value > max) {
+        return max;
+    }
+    if (value < min) {
+        return min;
+    }
+
+    return value;
+}
+
+template<units::unit_type unit_>
 constexpr units::measure<unit_> abs(const units::measure<unit_>& value) {
     return units::measure<unit_>(std::abs(value.value()));
 }

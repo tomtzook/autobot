@@ -4,7 +4,7 @@
 
 namespace autobot::sim {
 
-dc_motor::dc_motor(const units::volts_per_rad_per_sec kv, const units::volts_per_rad_per_sec_per_sec ka)
+dc_motor::dc_motor(const units::volts_per_rad_per_sec kv, const units::volts_per_rad_per_second_squared ka)
     : m_plant(math::dc_motor_system(kv, ka))
 {}
 

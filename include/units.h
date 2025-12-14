@@ -5,7 +5,6 @@
 #include "math/common.h"
 
 namespace autobot::units {
-
 namespace detail {
 
 struct unit_base_ {};
@@ -32,6 +31,13 @@ template<ratio_type ratio_, ratio_type pi_exponent_ = std::ratio<0>>
 struct converter {
     using ratio = ratio_;
     using pi_exponent = pi_exponent_;
+};
+
+template<unit_type t_>
+struct unit_name {
+    static constexpr auto name() noexcept {
+        return "";
+    }
 };
 
 template<
@@ -110,15 +116,17 @@ template<typename t_>
 concept unit_type = detail::unit_type<t_>;
 template<typename t_>
 concept measure_type = detail::measure_type<t_>;
+template<typename t_>
+concept unit_or_measure_type = detail::unit_type<t_> || detail::measure_type<t_>;
 
 template<typename t_>
 struct underlying_unit;
-template<unit_type t_>
+template<detail::unit_type t_>
 struct underlying_unit<t_> { using type = t_; };
-template<measure_type t_>
+template<detail::measure_type t_>
 struct underlying_unit<t_> { using type = t_::unit; };
 
-template<unit_type unit_>
+template<detail::unit_type unit_>
 struct measure;
 
 namespace ops {
@@ -252,89 +260,12 @@ using angular_acceleration = detail::category_base<std::ratio<0>, std::ratio<-2>
 
 }
 
-namespace units {
-
-// base units
-using meters = unit<math::floating_type, category::length, detail::converter<std::ratio<1>>>;
-using seconds = unit<math::floating_type, category::time, detail::converter<std::ratio<1>>>;
-using radians = unit<math::floating_type, category::angle, detail::converter<std::ratio<1>>>;
-using volts = unit<math::floating_type, category::voltage, detail::converter<std::ratio<1>>>;
-using ampere = unit<math::floating_type, category::current, detail::converter<std::ratio<1>>>;
-using kilogram = unit<math::floating_type, category::mass, detail::converter<std::ratio<1>>>;
-using newton = unit<math::floating_type, category::force, detail::converter<std::ratio<1>>>;
-using joule = unit<math::floating_type, category::energy, detail::converter<std::ratio<1>>>;
-
-
-// length
-using nanometers = derived_unit<meters, detail::converter<std::nano>>;
-using micrometers = derived_unit<meters, detail::converter<std::micro>>;
-using millimeters = derived_unit<meters, detail::converter<std::milli>>;
-using centimeters = derived_unit<meters, detail::converter<std::centi>>;
-using kilometers = derived_unit<meters, detail::converter<std::kilo>>;
-
-// time
-using nanoseconds = derived_unit<seconds, detail::converter<std::nano>>;
-using microseconds = derived_unit<seconds, detail::converter<std::micro>>;
-using milliseconds = derived_unit<seconds, detail::converter<std::milli>>;
-using minutes = derived_unit<seconds, detail::converter<std::ratio<60>>>;
-using hours = derived_unit<seconds, detail::converter<std::ratio<3600>>>;
-
-// angle
-using degrees = derived_unit<radians, detail::converter<std::ratio<1, 180>, std::ratio<1>>>;
-using rotations = derived_unit<radians, detail::converter<std::ratio<2>, std::ratio<1>>>;
-
-// voltage
-// current
-// mass
-// force
-// energy
-
-// linear velocity
-using meters_per_second = compound_unit<meters, unit_inverse<seconds>>;
-
-// linear acceleration
-using meters_per_second_squared = compound_unit<meters_per_second, unit_inverse<seconds>>;
-
-// angular velocity
-using radians_per_second = compound_unit<radians, unit_inverse<seconds>>;
-using degrees_per_second = compound_unit<degrees, unit_inverse<seconds>>;
-using rotations_per_second = compound_unit<rotations, unit_inverse<seconds>>;
-using rotations_per_minute = compound_unit<rotations, unit_inverse<minutes>>;
-
-// angular acceleration
-using radians_per_second_squared = compound_unit<radians_per_second, unit_inverse<seconds>>;
-using degrees_per_second_squared = compound_unit<degrees_per_second, unit_inverse<seconds>>;
-using rotations_per_second_squared = compound_unit<rotations_per_second, unit_inverse<seconds>>;
-using rotations_per_minute_per_second = compound_unit<rotations_per_minute, unit_inverse<seconds>>;
-
-// resistence
-using ohm = compound_unit<volts, unit_inverse<ampere>>;
-
-// torque
-using newton_meter = compound_unit<newton, meters>;
-
-// moment of inertia
-using jkg_meters_squared = compound_unit<joule, kilogram, unit_squared<meters>>;
-
-// other
-using rad_per_sec_per_volt = compound_unit<radians_per_second, unit_inverse<volts>>;
-using newton_meter_per_amp = compound_unit<newton_meter, unit_inverse<ampere>>;
-using volts_per_rad_per_sec = compound_unit<volts, unit_inverse<radians_per_second>>;
-using volts_per_rad_per_second_squared = compound_unit<volts, unit_inverse<radians_per_second_squared>>;
-
-static_assert(std::is_same_v<meters::cat, category::length>, "hello");
-static_assert(std::is_same_v<seconds::cat, category::time>, "hello2");
-static_assert(std::is_same_v<meters_per_second::cat, category::linear_velocity>, "hello3");
-static_assert(std::is_same_v<meters_per_second_squared::cat, category::linear_acceleration>, "hello4");
-
-}
-
 template<typename dst_unit_, detail::unit_type src_unit_>
 constexpr auto convert(const measure<src_unit_>& src) noexcept {
     return ops::convert<typename underlying_unit<dst_unit_>::type, src_unit_>(src);
 }
 
-template<unit_type unit_>
+template<detail::unit_type unit_>
 struct measure : detail::measure_base_ {
     using unit = unit_;
     using type = unit::type;
@@ -411,71 +342,98 @@ constexpr measure<unit_> operator*(const typename unit_::type lhs, const measure
 template<detail::unit_type unit_>
 constexpr measure<unit_> operator/(const typename unit_::type lhs, const measure<unit_>& rhs) noexcept { return measure<unit_>{lhs / rhs.value()}; }
 
+#define create_unit(_name, ...) \
+    namespace units { \
+        using _name = __VA_ARGS__ ; \
+    }\
+    template<> struct ::autobot::units::detail::unit_name< units::_name > { \
+        static constexpr auto name() noexcept { \
+            return #_name; \
+        }\
+    }; \
+    using _name = ::autobot::units::measure<units:: _name >;
+
+// base units
+create_unit(meters, unit<math::floating_type, category::length, detail::converter<std::ratio<1>>>)
+create_unit(seconds, unit<math::floating_type, category::time, detail::converter<std::ratio<1>>>)
+create_unit(radians, unit<math::floating_type, category::angle, detail::converter<std::ratio<1>>>)
+create_unit(volts, unit<math::floating_type, category::voltage, detail::converter<std::ratio<1>>>)
+create_unit(ampere, unit<math::floating_type, category::current, detail::converter<std::ratio<1>>>)
+create_unit(kilogram, unit<math::floating_type, category::mass, detail::converter<std::ratio<1>>>)
+create_unit(newton, unit<math::floating_type, category::force, detail::converter<std::ratio<1>>>)
+create_unit(joule, unit<math::floating_type, category::energy, detail::converter<std::ratio<1>>>)
+
 // length
-using nanometers = measure<units::nanometers>;
-using micrometers = measure<units::micrometers>;
-using millimeters = measure<units::millimeters>;
-using centimeters = measure<units::centimeters>;
-using meters = measure<units::meters>;
-using kilometers = measure<units::kilometers>;
+create_unit(nanometers, derived_unit<meters, detail::converter<std::nano>>)
+create_unit(micrometers, derived_unit<meters, detail::converter<std::micro>>)
+create_unit(millimeters, derived_unit<meters, detail::converter<std::milli>>)
+create_unit(centimeters, derived_unit<meters, detail::converter<std::centi>>)
+create_unit(kilometers, derived_unit<meters, detail::converter<std::kilo>>)
 
 // time
-using nanoseconds = measure<units::nanoseconds>;
-using microseconds = measure<units::microseconds>;
-using milliseconds = measure<units::milliseconds>;
-using seconds = measure<units::seconds>;
-using minutes = measure<units::minutes>;
-using hours = measure<units::hours>;
+create_unit(nanoseconds, derived_unit<seconds, detail::converter<std::nano>>)
+create_unit(microseconds, derived_unit<seconds, detail::converter<std::micro>>)
+create_unit(milliseconds, derived_unit<seconds, detail::converter<std::milli>>)
+create_unit(minutes, derived_unit<seconds, detail::converter<std::ratio<60>>>)
+create_unit(hours, derived_unit<seconds, detail::converter<std::ratio<3600>>>)
 
 // angle
-using radians = measure<units::radians>;
-using degrees = measure<units::degrees>;
-using rotations = measure<units::rotations>;
+create_unit(degrees, derived_unit<radians, detail::converter<std::ratio<1, 180>, std::ratio<1>>>)
+create_unit(rotations, derived_unit<radians, detail::converter<std::ratio<2>, std::ratio<1>>>)
 
 // volts
-using volts = measure<units::volts>;
+
 
 // current
-using ampere = measure<units::ampere>;
 using amps = ampere;
 
 // mass
-using kilogram = measure<units::kilogram>;
+
 
 // force
-using newton = measure<units::newton>;
+
 
 // energy
-using joule = measure<units::joule>;
+
 
 // linear velocity
-using meters_per_second = measure<units::meters_per_second>;
+create_unit(meters_per_second, compound_unit<meters, unit_inverse<seconds>>)
 
 // angular velocity
-using radians_per_second = measure<units::radians_per_second>;
-using degrees_per_second = measure<units::degrees_per_second>;
-using rotations_per_second = measure<units::rotations_per_second>;
+create_unit(radians_per_second, compound_unit<radians, unit_inverse<seconds>>);
+create_unit(degrees_per_second, compound_unit<degrees, unit_inverse<seconds>>);
+create_unit(rotations_per_second, compound_unit<rotations, unit_inverse<seconds>>);
+create_unit(rotations_per_minute, compound_unit<rotations, unit_inverse<minutes>>);
+
 using rps = rotations_per_second;
-using rotations_per_minute = measure<units::rotations_per_minute>;
 using rpm = rotations_per_minute;
 
 // linear acceleration
-using meters_per_second_squared = measure<units::meters_per_second_squared>;
+create_unit(meters_per_second_squared, compound_unit<meters_per_second, unit_inverse<seconds>>)
 
-// torque
-using newton_meter = measure<units::newton_meter>;
+// angular acceleration
+create_unit(radians_per_second_squared, compound_unit<radians_per_second, unit_inverse<seconds>>);
+create_unit(degrees_per_second_squared, compound_unit<degrees_per_second, unit_inverse<seconds>>);
+create_unit(rotations_per_second_squared, compound_unit<rotations_per_second, unit_inverse<seconds>>);
+create_unit(rotations_per_minute_per_second, compound_unit<rotations_per_minute, unit_inverse<seconds>>)
 
 // resistence
-using ohm = measure<units::ohm>;
+create_unit(ohm, compound_unit<volts, unit_inverse<ampere>>);
+
+// torque
+// todo: fix
+// create_unit(newton_meter, compound_unit<newton, meters>);
+namespace units { using newton_meter = joule; }
+using newton_meter = joule;
 
 // moment of inertia
-using jkg_meters_squared = measure<units::jkg_meters_squared>;
+create_unit(jkg_meters_squared, compound_unit<joule, kilogram, unit_squared<meters>>);
 
-// others
-using rad_per_sec_per_volt = measure<units::rad_per_sec_per_volt>;
-using newton_meter_per_amp = measure<units::newton_meter_per_amp>;
-using volts_per_rad_per_sec = measure<units::volts_per_rad_per_sec>;
-using volts_per_rad_per_sec_per_sec = measure<units::volts_per_rad_per_second_squared>;
+// other
+create_unit(rad_per_sec_per_volt, compound_unit<radians_per_second, unit_inverse<volts>>);
+create_unit(newton_meter_per_amp, compound_unit<newton_meter, unit_inverse<ampere>>);
+create_unit(volts_per_rad_per_sec, compound_unit<volts, unit_inverse<radians_per_second>>)
+create_unit(volts_per_rad_per_second_squared, compound_unit<volts, unit_inverse<radians_per_second_squared>>)
 
 namespace literals {
 
@@ -512,4 +470,10 @@ constexpr rotations_per_minute operator""_rpm(const long double value) noexcept 
 
 }
 
+}
+
+template<autobot::units::detail::unit_type unit_>
+std::ostream& operator<<(std::ostream& os, const autobot::units::measure<unit_>& value) {
+    os << value.value() << " " << autobot::units::detail::unit_name<unit_>::name();
+    return os;
 }

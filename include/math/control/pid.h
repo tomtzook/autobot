@@ -1,60 +1,68 @@
 #pragma once
 
 #include "math/common.h"
+#include "units.h"
+#include "math/ops.h"
 
 namespace autobot::math {
 
-template<numeric type_ = floating_type>
-class pid {
+template<units::unit_or_measure_type unit_>
+class pid_controller {
 public:
-    using type = type_;
+    using unit = units::underlying_unit<unit_>::type;
+    using velocity_unit = units::compound_unit<unit, units::unit_inverse<units::units::seconds>>;
+    using raw_type = unit::type;
+    using type = units::measure<unit>;
+    using velocity_type = units::measure<velocity_unit>;
 
-    pid();
-    pid(const pid&) = default;
-    pid(pid&&) = default;
-    pid(type kp, type ki, type kd);
+    static constexpr auto izone_0 = type(0);
 
-    pid& operator=(const pid&) = default;
-    pid& operator=(pid&&) = default;
+    pid_controller();
+    pid_controller(const pid_controller&) = default;
+    pid_controller(pid_controller&&) = default;
+    pid_controller(raw_type kp, raw_type ki, raw_type kd);
 
-    [[nodiscard]] type kp() const;
-    void kp(type kp);
-    [[nodiscard]] type ki() const;
-    void ki(type ki);
-    [[nodiscard]] type kd() const;
-    void kd(type kd);
+    pid_controller& operator=(const pid_controller&) = default;
+    pid_controller& operator=(pid_controller&&) = default;
+
+    [[nodiscard]] raw_type kp() const;
+    void kp(raw_type kp);
+    [[nodiscard]] raw_type ki() const;
+    void ki(raw_type ki);
+    [[nodiscard]] raw_type kd() const;
+    void kd(raw_type kd);
     [[nodiscard]] type izone() const;
     void izone(type izone);
-    [[nodiscard]] type min_out() const;
-    void min_out(type min_out);
-    [[nodiscard]] type max_out() const;
-    void max_out(type max_out);
+    [[nodiscard]] raw_type min_out() const;
+    void min_out(raw_type min_out);
+    [[nodiscard]] raw_type max_out() const;
+    void max_out(raw_type max_out);
 
     void reset();
-    [[nodiscard]] type calculate(type process_variable, type set_point, type dt);
-    [[nodiscard]] bool at_setpoint(type position_tolerance, type velocity_tolerance) const;
+    [[nodiscard]] raw_type calculate(const type& process_variable, const type& set_point, units::seconds dt);
+    [[nodiscard]] bool at_setpoint(type position_tolerance, velocity_type velocity_tolerance) const;
 
 private:
-    type m_kp;
-    type m_ki;
-    type m_kd;
+    raw_type m_kp;
+    raw_type m_ki;
+    raw_type m_kd;
     type m_izone;
-    type m_min_out;
-    type m_max_out;
+    raw_type m_min_out;
+    raw_type m_max_out;
 
     bool m_is_first_run;
     type m_last_error;
-    type m_last_velocity_error;
+    velocity_type m_last_velocity_error;
     type m_total_error;
 };
 
-template<numeric type_>
-pid<type_>::pid()
-    : pid(0, 0, 0)
+template<units::unit_or_measure_type unit_>
+pid_controller<unit_>::pid_controller()
+    : pid_controller(0, 0, 0)
 {}
 
-template<numeric type_>
-pid<type_>::pid(const type kp, const type ki, const type kd)
+template<units::unit_or_measure_type unit_>
+pid_controller<unit_>::pid_controller(const raw_type kp, const raw_type ki, const raw_type kd)
     : m_kp(kp)
     , m_ki(ki)
     , m_kd(kd)
@@ -67,76 +75,76 @@ pid<type_>::pid(const type kp, const type ki, const type kd)
     , m_total_error(0)
 {}
 
-template<numeric type_>
-pid<type_>::type pid<type_>::kp() const {
+template<units::unit_or_measure_type unit_>
+pid_controller<unit_>::raw_type pid_controller<unit_>::kp() const {
     return m_kp;
 }
 
-template<numeric type_>
-void pid<type_>::kp(const type kp) {
+template<units::unit_or_measure_type unit_>
+void pid_controller<unit_>::kp(const raw_type kp) {
     m_kp = kp;
 }
 
-template<numeric type_>
-pid<type_>::type pid<type_>::ki() const {
+template<units::unit_or_measure_type unit_>
+pid_controller<unit_>::raw_type pid_controller<unit_>::ki() const {
     return m_ki;
 }
 
-template<numeric type_>
-void pid<type_>::ki(const type ki) {
+template<units::unit_or_measure_type unit_>
+void pid_controller<unit_>::ki(const raw_type ki) {
     m_ki = ki;
 }
 
-template<numeric type_>
-pid<type_>::type pid<type_>::kd() const {
+template<units::unit_or_measure_type unit_>
+pid_controller<unit_>::raw_type pid_controller<unit_>::kd() const {
     return m_kd;
 }
 
-template<numeric type_>
-void pid<type_>::kd(const type kd) {
+template<units::unit_or_measure_type unit_>
+void pid_controller<unit_>::kd(const raw_type kd) {
     m_kd = kd;
 }
 
-template<numeric type_>
-pid<type_>::type pid<type_>::izone() const {
+template<units::unit_or_measure_type unit_>
+pid_controller<unit_>::type pid_controller<unit_>::izone() const {
     return m_izone;
 }
 
-template<numeric type_>
-void pid<type_>::izone(const type izone) {
+template<units::unit_or_measure_type unit_>
+void pid_controller<unit_>::izone(const type izone) {
     m_izone = izone;
 }
 
-template<numeric type_>
-pid<type_>::type pid<type_>::min_out() const {
+template<units::unit_or_measure_type unit_>
+pid_controller<unit_>::raw_type pid_controller<unit_>::min_out() const {
     return m_min_out;
 }
 
-template<numeric type_>
-void pid<type_>::min_out(const type min_out) {
+template<units::unit_or_measure_type unit_>
+void pid_controller<unit_>::min_out(const raw_type min_out) {
     m_min_out = min_out;
 }
 
-template<numeric type_>
-pid<type_>::type pid<type_>::max_out() const {
+template<units::unit_or_measure_type unit_>
+pid_controller<unit_>::raw_type pid_controller<unit_>::max_out() const {
     return m_max_out;
 }
 
-template<numeric type_>
-void pid<type_>::max_out(const type max_out) {
+template<units::unit_or_measure_type unit_>
+void pid_controller<unit_>::max_out(const raw_type max_out) {
     m_max_out = max_out;
 }
 
-template<numeric type_>
-void pid<type_>::reset() {
+template<units::unit_or_measure_type unit_>
+void pid_controller<unit_>::reset() {
     m_is_first_run = true;
     m_last_error = 0;
     m_last_velocity_error = 0;
     m_total_error = 0;
 }
 
-template<numeric type_>
-pid<type_>::type pid<type_>::calculate(const type process_variable, const type set_point, const type dt) {
+template<units::unit_or_measure_type unit_>
+pid_controller<unit_>::raw_type pid_controller<unit_>::calculate(const type& process_variable, const type& set_point, const units::seconds dt) {
     const auto error = set_point - process_variable;
 
     if (m_is_first_run) {
@@ -146,11 +154,11 @@ pid<type_>::type pid<type_>::calculate(const type process_variable, const type s
 
     const auto velocity_error = (error - m_last_error) / dt;
 
-    const auto p = m_kp * error;
-    const auto i = m_ki * m_total_error;
-    const auto d = m_kd * velocity_error;
+    const auto p = m_kp * error.value();
+    const auto i = m_ki * m_total_error.value();
+    const auto d = m_kd * velocity_error.value();
 
-    if (m_izone != 0 && abs(m_total_error) < m_izone) {
+    if (m_izone != izone_0 && abs(m_total_error) < m_izone) {
         m_total_error = 0;
     } else {
         m_total_error += error;
@@ -163,8 +171,8 @@ pid<type_>::type pid<type_>::calculate(const type process_variable, const type s
     return constrain(output, m_min_out, m_max_out);
 }
 
-template<numeric type_>
-bool pid<type_>::at_setpoint(const type position_tolerance, const type velocity_tolerance) const {
+template<units::unit_or_measure_type unit_>
+bool pid_controller<unit_>::at_setpoint(const type position_tolerance, const velocity_type velocity_tolerance) const {
     return abs(m_last_error) <= position_tolerance && abs(m_last_velocity_error) <= velocity_tolerance;
 }
 

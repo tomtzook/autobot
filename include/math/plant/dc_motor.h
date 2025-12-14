@@ -6,12 +6,6 @@
 
 namespace autobot::math {
 
-// 1 / kA = gearing * motor.KtNMPerAmp / (motor.rOhms * JKgMetersSquared)
-// kA = (motor.rOhms * JKgMetersSquared) / (gearing * motor.KtNMPerAmp)
-// -kV / kA = -gearing * gearing * motor.KtNMPerAmp / (motor.KvRadPerSecPerVolt * motor.rOhms * JKgMetersSquared)
-// -kV / kA = -gearing / (kA * motor.KvRadPerSecPerVolt)
-// kV = gearing / motor.KvRadPerSecPerVolt
-
 struct dc_motor {
     units::volts nominal_voltage;
     units::newton_meter stall_torque;
@@ -29,7 +23,7 @@ struct dc_motor {
              units::radians_per_second free_speed);
 
     [[nodiscard]] units::volts_per_rad_per_sec kv(floating_type gearing) const;
-    [[nodiscard]] units::volts_per_rad_per_sec_per_sec ka(floating_type gearing, units::jkg_meters_squared moment_of_inertia) const;
+    [[nodiscard]] units::volts_per_rad_per_second_squared ka(floating_type gearing, units::jkg_meters_squared moment_of_inertia) const;
 };
 
 class dc_motor_system : public state_spaced_system<floating_type, 0, 1, 2, 2> {
@@ -48,7 +42,7 @@ public:
         output_velocity = 1 // rads/s
     };
 
-    dc_motor_system(units::volts_per_rad_per_sec kv, units::volts_per_rad_per_sec_per_sec ka);
+    dc_motor_system(units::volts_per_rad_per_sec kv, units::volts_per_rad_per_second_squared ka);
     dc_motor_system(const dc_motor& motor, units::jkg_meters_squared moment_of_inertia, type gearing);
 };
 

@@ -24,6 +24,8 @@ set(SOURCES
         src/sim/dc_motor.cpp
         include/math/control/trapezoid_profile.h
         include/math/ops.h
+        include/math/control/feed_forward.h
+        include/math/control/triangle_profile.h
 )
 
 add_library(autobot STATIC ${SOURCES})

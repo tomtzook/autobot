@@ -23,11 +23,11 @@ units::volts_per_rad_per_sec dc_motor::kv(const floating_type gearing) const {
     return units::volts_per_rad_per_sec(gearing / motor_kv.value());
 }
 
-units::volts_per_rad_per_sec_per_sec dc_motor::ka(const floating_type gearing, const units::jkg_meters_squared moment_of_inertia) const {
-    return units::volts_per_rad_per_sec_per_sec((resistence.value() * moment_of_inertia.value()) / (gearing * motor_kt.value()));
+units::volts_per_rad_per_second_squared dc_motor::ka(const floating_type gearing, const units::jkg_meters_squared moment_of_inertia) const {
+    return units::volts_per_rad_per_second_squared((resistence.value() * moment_of_inertia.value()) / (gearing * motor_kt.value()));
 }
 
-dc_motor_system::dc_motor_system(const units::volts_per_rad_per_sec kv, const units::volts_per_rad_per_sec_per_sec ka)
+dc_motor_system::dc_motor_system(const units::volts_per_rad_per_sec kv, const units::volts_per_rad_per_second_squared ka)
     : state_spaced_system(
         matrix2f{{0, 1}, {0, -kv.value() / ka.value()}},
         vector2f{0, 1 / ka.value()},
