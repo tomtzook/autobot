@@ -106,7 +106,19 @@ struct derived_unit : detail::unit_base_ {
         >;
 };
 
-template<detail::unit_type unit_>
+template<typename t_>
+concept unit_type = detail::unit_type<t_>;
+template<typename t_>
+concept measure_type = detail::measure_type<t_>;
+
+template<typename t_>
+struct underlying_unit;
+template<unit_type t_>
+struct underlying_unit<t_> { using type = t_; };
+template<measure_type t_>
+struct underlying_unit<t_> { using type = t_::unit; };
+
+template<unit_type unit_>
 struct measure;
 
 namespace ops {
@@ -213,18 +225,6 @@ struct compound_unit_impl<unit1_, unit2_, other_units_...>
 
 template<detail::unit_type unit1_, detail::unit_type unit2_, detail::unit_type... other_units_>
 using compound_unit = detail::compound_unit_impl<unit1_, unit2_, other_units_...>::type;
-
-template<typename t_>
-concept unit_type = detail::unit_type<t_>;
-template<typename t_>
-concept measure_type = detail::measure_type<t_>;
-
-template<typename t_>
-struct underlying_unit;
-template<unit_type t_>
-struct underlying_unit<t_> { using type = t_; };
-template<measure_type t_>
-struct underlying_unit<t_> { using type = t_::unit; };
 
 template<typename t_, typename... cats_>
 concept unit_of_category_type =
@@ -334,7 +334,7 @@ constexpr auto convert(const measure<src_unit_>& src) noexcept {
     return ops::convert<typename underlying_unit<dst_unit_>::type, src_unit_>(src);
 }
 
-template<detail::unit_type unit_>
+template<unit_type unit_>
 struct measure : detail::measure_base_ {
     using unit = unit_;
     using type = unit::type;

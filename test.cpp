@@ -5,6 +5,7 @@
 #include "units.h"
 #include "sim/dc_motor.h"
 #include "math/control/trapezoid_profile.h"
+#include "math/ops.h"
 
 #include "units.h"
 

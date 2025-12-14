@@ -11,7 +11,7 @@ concept numeric = std::integral<t_> || std::floating_point<t_>;
 using integer_type = int;
 using floating_type = float;
 
-constexpr floating_type pi = M_1_PIf;
+constexpr floating_type pi = M_PIf;
 
 template<size_t rows, size_t cols>
 using matrixd = Eigen::Matrix<integer_type, rows, cols>;
