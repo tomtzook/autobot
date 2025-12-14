@@ -16,7 +16,11 @@ template<typename t_>
 concept unit_type = std::is_base_of_v<unit_base_, t_>;
 
 template<typename t_>
-concept category_base_type = std::is_base_of_v<category_base_, t_>;
+struct is_category_base : std::is_base_of<category_base_, t_> {};
+template<typename t_>
+inline constexpr bool is_category_base_v = std::is_base_of_v<category_base_, t_>;
+template<typename t_>
+concept category_base_type = is_category_base_v<t_>;
 
 template<typename t_>
 concept measure_type = std::is_base_of_v<measure_base_, t_>;
@@ -92,6 +96,16 @@ struct unit : detail::unit_base_ {
     using converter = converter_;
 };
 
+template<detail::unit_type base_unit_, typename converter_>
+struct derived_unit : detail::unit_base_ {
+    using type = base_unit_::type;
+    using cat = base_unit_::cat;
+    using converter = detail::converter<
+        std::ratio_multiply<typename base_unit_::converter::ratio, typename converter_::ratio>,
+        std::ratio_add<typename base_unit_::converter::pi_exponent, typename converter_::pi_exponent>
+        >;
+};
+
 template<detail::unit_type unit_>
 struct measure;
 
@@ -112,9 +126,6 @@ struct unit_multiply_impl {
 };
 
 template<detail::unit_type unit1_, detail::unit_type unit2_>
-using unit_multiply = unit_multiply_impl<unit1_, unit2_>::type;
-
-template<detail::unit_type unit1_, detail::unit_type unit2_>
 struct unit_divide_impl {
     static_assert(std::is_same_v<typename unit1_::type, typename unit2_::type>, "units must use the same underlying types");
 
@@ -127,9 +138,6 @@ struct unit_divide_impl {
             >
         >;
 };
-
-template<detail::unit_type unit1_, detail::unit_type unit2_>
-using unit_divide = unit_divide_impl<unit1_, unit2_>::type;
 
 template<detail::unit_type unit_>
 struct unit_inverse_impl {
@@ -144,9 +152,6 @@ struct unit_inverse_impl {
 };
 
 template<detail::unit_type unit_>
-using unit_inverse = unit_inverse_impl<unit_>::type;
-
-template<detail::unit_type unit_>
 struct unit_squared_impl {
     using type = unit<
             typename unit_::type,
@@ -158,14 +163,11 @@ struct unit_squared_impl {
         >;
 };
 
-template<detail::unit_type unit_>
-using unit_squared = unit_squared_impl<unit_>::type;
-
 template<detail::unit_type unit1_, detail::unit_type unit2_>
-inline constexpr bool is_convertible = std::is_same_v<typename unit1_::cat, typename unit2_::cat>;
+inline constexpr bool is_convertible_v = std::is_same_v<typename unit1_::cat, typename unit2_::cat>;
 
 template<detail::unit_type dst_unit_, detail::unit_type src_unit_>
-constexpr measure<dst_unit_> convert(const measure<src_unit_>& src) noexcept requires(ops::is_convertible<src_unit_, dst_unit_>) {
+constexpr measure<dst_unit_> convert(const measure<src_unit_>& src) noexcept requires(ops::is_convertible_v<src_unit_, dst_unit_>) {
     if constexpr (std::is_same_v<dst_unit_, src_unit_>) {
         return src;
     } else {
@@ -175,7 +177,7 @@ constexpr measure<dst_unit_> convert(const measure<src_unit_>& src) noexcept req
 
         auto converted = static_cast<type>(src.value()) * static_cast<type>(ratio::num) / static_cast<type>(ratio::den);
         if constexpr (pi_ratio::num != 0) {
-            const auto pi = std::pow(M_1_PIf, static_cast<type>(pi_ratio::num) / static_cast<type>(pi_ratio::den));
+            const auto pi = std::pow(math::pi, static_cast<type>(pi_ratio::num) / static_cast<type>(pi_ratio::den));
             converted *= pi;
         }
 
@@ -185,6 +187,18 @@ constexpr measure<dst_unit_> convert(const measure<src_unit_>& src) noexcept req
 
 }
 
+template<detail::unit_type unit1_, detail::unit_type unit2_>
+using unit_multiply = ops::unit_multiply_impl<unit1_, unit2_>::type;
+
+template<detail::unit_type unit1_, detail::unit_type unit2_>
+using unit_divide = ops::unit_divide_impl<unit1_, unit2_>::type;
+
+template<detail::unit_type unit_>
+using unit_inverse = ops::unit_inverse_impl<unit_>::type;
+
+template<detail::unit_type unit_>
+using unit_squared = ops::unit_squared_impl<unit_>::type;
+
 namespace detail {
 
 template<unit_type unit_, unit_type... other_units_>
@@ -193,9 +207,30 @@ template<unit_type unit_>
 struct compound_unit_impl<unit_> : unit_base_ { using type = unit_; };
 template<unit_type unit1_, unit_type unit2_, unit_type... other_units_>
 struct compound_unit_impl<unit1_, unit2_, other_units_...>
-    : compound_unit_impl<ops::unit_multiply<unit1_, unit2_>, other_units_...> {};
+    : compound_unit_impl<unit_multiply<unit1_, unit2_>, other_units_...> {};
 
 }
+
+template<detail::unit_type unit1_, detail::unit_type unit2_, detail::unit_type... other_units_>
+using compound_unit = detail::compound_unit_impl<unit1_, unit2_, other_units_...>::type;
+
+template<typename t_>
+concept unit_type = detail::unit_type<t_>;
+template<typename t_>
+concept measure_type = detail::measure_type<t_>;
+
+template<typename t_>
+struct underlying_unit;
+template<unit_type t_>
+struct underlying_unit<t_> { using type = t_; };
+template<measure_type t_>
+struct underlying_unit<t_> { using type = t_::unit; };
+
+template<typename t_, typename... cats_>
+concept unit_of_category_type =
+    (detail::unit_type<t_> || detail::measure_type<t_>) &&
+    std::conjunction_v<detail::is_category_base<cats_>...> &&
+    std::disjunction_v<std::is_same<typename underlying_unit<t_>::type::cat, cats_>...>;
 
 namespace category {
 
@@ -219,89 +254,84 @@ using angular_acceleration = detail::category_base<std::ratio<0>, std::ratio<-2>
 
 namespace units {
 
-template<detail::unit_type unit1_, detail::unit_type unit2_, detail::unit_type... other_units_>
-using compound_unit = detail::compound_unit_impl<unit1_, unit2_, other_units_...>::type;
+// base units
+using meters = unit<math::floating_type, category::length, detail::converter<std::ratio<1>>>;
+using seconds = unit<math::floating_type, category::time, detail::converter<std::ratio<1>>>;
+using radians = unit<math::floating_type, category::angle, detail::converter<std::ratio<1>>>;
+using volts = unit<math::floating_type, category::voltage, detail::converter<std::ratio<1>>>;
+using ampere = unit<math::floating_type, category::current, detail::converter<std::ratio<1>>>;
+using kilogram = unit<math::floating_type, category::mass, detail::converter<std::ratio<1>>>;
+using newton = unit<math::floating_type, category::force, detail::converter<std::ratio<1>>>;
+using joule = unit<math::floating_type, category::energy, detail::converter<std::ratio<1>>>;
+
 
 // length
-using nanometers = unit<float, category::length, detail::converter<std::nano>>;
-using micrometers = unit<float, category::length, detail::converter<std::micro>>;
-using millimeters = unit<float, category::length, detail::converter<std::milli>>;
-using centimeters = unit<float, category::length, detail::converter<std::centi>>;
-using meters = unit<float, category::length, detail::converter<std::ratio<1>>>;
-using kilometers = unit<float, category::length, detail::converter<std::kilo>>;
+using nanometers = derived_unit<meters, detail::converter<std::nano>>;
+using micrometers = derived_unit<meters, detail::converter<std::micro>>;
+using millimeters = derived_unit<meters, detail::converter<std::milli>>;
+using centimeters = derived_unit<meters, detail::converter<std::centi>>;
+using kilometers = derived_unit<meters, detail::converter<std::kilo>>;
 
 // time
-using nanoseconds = unit<float, category::time, detail::converter<std::nano>>;
-using microseconds = unit<float, category::time, detail::converter<std::micro>>;
-using milliseconds = unit<float, category::time, detail::converter<std::milli>>;
-using seconds = unit<float, category::time, detail::converter<std::ratio<1>>>;
-using minutes = unit<float, category::time, detail::converter<std::ratio<60>>>;
-using hours = unit<float, category::time, detail::converter<std::ratio<3600>>>;
+using nanoseconds = derived_unit<seconds, detail::converter<std::nano>>;
+using microseconds = derived_unit<seconds, detail::converter<std::micro>>;
+using milliseconds = derived_unit<seconds, detail::converter<std::milli>>;
+using minutes = derived_unit<seconds, detail::converter<std::ratio<60>>>;
+using hours = derived_unit<seconds, detail::converter<std::ratio<3600>>>;
 
 // angle
-using radians = unit<float, category::angle, detail::converter<std::ratio<1>>>;
-using degrees = unit<float, category::angle, detail::converter<std::ratio<1, 180>, std::ratio<1>>>;
-using rotations = unit<float, category::angle, detail::converter<std::ratio<2>, std::ratio<1>>>;
+using degrees = derived_unit<radians, detail::converter<std::ratio<1, 180>, std::ratio<1>>>;
+using rotations = derived_unit<radians, detail::converter<std::ratio<2>, std::ratio<1>>>;
 
 // voltage
-using volts = unit<float, category::voltage, detail::converter<std::ratio<1>>>;
-
 // current
-using ampere = unit<float, category::current, detail::converter<std::ratio<1>>>;
-
 // mass
-using kilogram = unit<float, category::mass, detail::converter<std::ratio<1>>>;
-
 // force
-using newton = unit<float, category::force, detail::converter<std::ratio<1>>>;
-
 // energy
-using joule = unit<float, category::energy, detail::converter<std::ratio<1>>>;
 
 // linear velocity
-using meters_per_second = compound_unit<meters, ops::unit_inverse<seconds>>;
+using meters_per_second = compound_unit<meters, unit_inverse<seconds>>;
 
 // linear acceleration
-using meters_per_second_per_second = compound_unit<meters_per_second, ops::unit_inverse<seconds>>;
+using meters_per_second_squared = compound_unit<meters_per_second, unit_inverse<seconds>>;
 
 // angular velocity
-using radians_per_second = compound_unit<radians, ops::unit_inverse<seconds>>;
-using degrees_per_second = compound_unit<degrees, ops::unit_inverse<seconds>>;
-using rotations_per_second = compound_unit<rotations, ops::unit_inverse<seconds>>;
-using rotations_per_minute = compound_unit<rotations, ops::unit_inverse<minutes>>;
+using radians_per_second = compound_unit<radians, unit_inverse<seconds>>;
+using degrees_per_second = compound_unit<degrees, unit_inverse<seconds>>;
+using rotations_per_second = compound_unit<rotations, unit_inverse<seconds>>;
+using rotations_per_minute = compound_unit<rotations, unit_inverse<minutes>>;
 
 // angular acceleration
-using radians_per_second_per_second = compound_unit<radians_per_second, ops::unit_inverse<seconds>>;
-using degrees_per_second_per_second = compound_unit<degrees_per_second, ops::unit_inverse<seconds>>;
-using rotations_per_second_per_second = compound_unit<rotations_per_second, ops::unit_inverse<seconds>>;
-using rotations_per_minute_per_second = compound_unit<rotations_per_minute, ops::unit_inverse<seconds>>;
+using radians_per_second_squared = compound_unit<radians_per_second, unit_inverse<seconds>>;
+using degrees_per_second_squared = compound_unit<degrees_per_second, unit_inverse<seconds>>;
+using rotations_per_second_squared = compound_unit<rotations_per_second, unit_inverse<seconds>>;
+using rotations_per_minute_per_second = compound_unit<rotations_per_minute, unit_inverse<seconds>>;
 
 // resistence
-using ohm = compound_unit<volts, ops::unit_inverse<ampere>>;
+using ohm = compound_unit<volts, unit_inverse<ampere>>;
 
 // torque
 using newton_meter = compound_unit<newton, meters>;
 
 // moment of inertia
-using jkg_meters_squared = compound_unit<joule, kilogram, ops::unit_squared<meters>>;
+using jkg_meters_squared = compound_unit<joule, kilogram, unit_squared<meters>>;
 
 // other
-using rad_per_sec_per_volt = compound_unit<radians_per_second, ops::unit_inverse<volts>>;
-using newton_meter_per_amp = compound_unit<newton_meter, ops::unit_inverse<ampere>>;
-using volts_per_rad_per_sec = compound_unit<volts, ops::unit_inverse<radians_per_second>>;
-using volts_per_rad_per_sec_per_sec = compound_unit<volts, ops::unit_inverse<radians_per_second_per_second>>;
+using rad_per_sec_per_volt = compound_unit<radians_per_second, unit_inverse<volts>>;
+using newton_meter_per_amp = compound_unit<newton_meter, unit_inverse<ampere>>;
+using volts_per_rad_per_sec = compound_unit<volts, unit_inverse<radians_per_second>>;
+using volts_per_rad_per_second_squared = compound_unit<volts, unit_inverse<radians_per_second_squared>>;
 
 static_assert(std::is_same_v<meters::cat, category::length>, "hello");
 static_assert(std::is_same_v<seconds::cat, category::time>, "hello2");
 static_assert(std::is_same_v<meters_per_second::cat, category::linear_velocity>, "hello3");
-static_assert(std::is_same_v<meters_per_second_per_second::cat, category::linear_acceleration>, "hello4");
+static_assert(std::is_same_v<meters_per_second_squared::cat, category::linear_acceleration>, "hello4");
 
 }
 
 template<typename dst_unit_, detail::unit_type src_unit_>
 constexpr auto convert(const measure<src_unit_>& src) noexcept {
-    using actual_dst_unit_ = std::conditional_t<std::is_base_of_v<detail::measure_base_, dst_unit_>, typename dst_unit_::unit, dst_unit_>;
-    return ops::convert<actual_dst_unit_, src_unit_>(src);
+    return ops::convert<typename underlying_unit<dst_unit_>::type, src_unit_>(src);
 }
 
 template<detail::unit_type unit_>
@@ -313,9 +343,7 @@ struct measure : detail::measure_base_ {
     measure(const measure&) = default;
     measure(measure&&) = default;
 
-    // ReSharper disable once CppNonExplicitConvertingConstructor
-    //constexpr measure(const type value) : m_value(value) {} // NOLINT(*-explicit-constructor)
-    explicit constexpr measure(const long double value) : m_value(static_cast<type>(value)) {}
+    explicit constexpr measure(const type value) : m_value(value) {}
 
     measure& operator=(const measure&) = default;
     measure& operator=(measure&&) = default;
@@ -327,51 +355,61 @@ struct measure : detail::measure_base_ {
     constexpr void value(const type value) noexcept { m_value = value; }
 
     template<detail::unit_type other_unit_>
-    constexpr measure& operator=(const measure<other_unit_>& rhs) noexcept requires(ops::is_convertible<unit, other_unit_>)
+    constexpr measure& operator=(const measure<other_unit_>& rhs) noexcept requires(ops::is_convertible_v<unit, other_unit_>)
     { m_value = convert<unit>(rhs).m_value; return *this; };
 
     template<detail::unit_type other_unit_>
-    constexpr bool operator==(const measure<other_unit_>& rhs) const noexcept requires(ops::is_convertible<unit, other_unit_>)
+    constexpr bool operator==(const measure<other_unit_>& rhs) const noexcept requires(ops::is_convertible_v<unit, other_unit_>)
     { return m_value == convert<unit>(rhs).m_value; };
     template<detail::unit_type other_unit_>
-    constexpr bool operator!=(const measure<other_unit_>& rhs) const noexcept requires(ops::is_convertible<unit, other_unit_>)
+    constexpr bool operator!=(const measure<other_unit_>& rhs) const noexcept requires(ops::is_convertible_v<unit, other_unit_>)
     { return m_value != convert<unit>(rhs).m_value; };
     template<detail::unit_type other_unit_>
-    constexpr bool operator>(const measure<other_unit_>& rhs) const noexcept requires(ops::is_convertible<unit, other_unit_>)
+    constexpr bool operator>(const measure<other_unit_>& rhs) const noexcept requires(ops::is_convertible_v<unit, other_unit_>)
     { return m_value > convert<unit>(rhs).m_value; };
     template<detail::unit_type other_unit_>
-    constexpr bool operator<(const measure<other_unit_>& rhs) const noexcept requires(ops::is_convertible<unit, other_unit_>)
+    constexpr bool operator<(const measure<other_unit_>& rhs) const noexcept requires(ops::is_convertible_v<unit, other_unit_>)
     { return m_value < convert<unit>(rhs).m_value; };
     template<detail::unit_type other_unit_>
-    constexpr bool operator>=(const measure<other_unit_>& rhs) const noexcept requires(ops::is_convertible<unit, other_unit_>)
+    constexpr bool operator>=(const measure<other_unit_>& rhs) const noexcept requires(ops::is_convertible_v<unit, other_unit_>)
     { return m_value >= convert<unit>(rhs).m_value; };
     template<detail::unit_type other_unit_>
-    constexpr bool operator<=(const measure<other_unit_>& rhs) const noexcept requires(ops::is_convertible<unit, other_unit_>)
+    constexpr bool operator<=(const measure<other_unit_>& rhs) const noexcept requires(ops::is_convertible_v<unit, other_unit_>)
     { return m_value <= convert<unit>(rhs).m_value; };
 
     template<detail::unit_type other_unit_>
-    constexpr measure operator+(const measure<other_unit_>& rhs) const noexcept requires(ops::is_convertible<unit, other_unit_>)
+    constexpr measure operator+(const measure<other_unit_>& rhs) const noexcept requires(ops::is_convertible_v<unit, other_unit_>)
     { return measure{m_value + convert<unit>(rhs).m_value}; }
     template<detail::unit_type other_unit_>
-    constexpr measure operator-(const measure<other_unit_>& rhs) const noexcept requires(ops::is_convertible<unit, other_unit_>)
+    constexpr measure operator-(const measure<other_unit_>& rhs) const noexcept requires(ops::is_convertible_v<unit, other_unit_>)
     { return measure{m_value - convert<unit>(rhs).m_value}; }
     template<detail::unit_type other_unit_>
-    constexpr measure<units::compound_unit<unit, other_unit_>> operator*(const measure<other_unit_>& rhs) const noexcept requires(!ops::is_convertible<unit, other_unit_>)
-    { return measure<units::compound_unit<unit, other_unit_>>{m_value * rhs.value()}; }
+    constexpr measure<compound_unit<unit, other_unit_>> operator*(const measure<other_unit_>& rhs) const noexcept requires(!ops::is_convertible_v<unit, other_unit_>)
+    { return measure<compound_unit<unit, other_unit_>>{m_value * rhs.value()}; }
     template<detail::unit_type other_unit_>
-    constexpr measure<units::compound_unit<unit, ops::unit_inverse<other_unit_>>> operator/(const measure<other_unit_>& rhs) const noexcept requires(!ops::is_convertible<unit, other_unit_>)
-    { return measure<units::compound_unit<unit, ops::unit_inverse<other_unit_>>>{m_value / rhs.value()}; }
+    constexpr measure<compound_unit<unit, unit_inverse<other_unit_>>> operator/(const measure<other_unit_>& rhs) const noexcept requires(!ops::is_convertible_v<unit, other_unit_>)
+    { return measure<compound_unit<unit, unit_inverse<other_unit_>>>{m_value / rhs.value()}; }
+
+    constexpr measure operator*(const type rhs) const noexcept { return measure{m_value * rhs}; }
+    constexpr measure operator/(const type& rhs) const noexcept { return measure{m_value / rhs}; }
 
     template<detail::unit_type other_unit_>
-    constexpr measure& operator+=(const measure<other_unit_>& rhs) noexcept requires(ops::is_convertible<unit, other_unit_>)
+    constexpr measure& operator+=(const measure<other_unit_>& rhs) noexcept requires(ops::is_convertible_v<unit, other_unit_>)
     { m_value += convert<unit>(rhs).m_value; return *this; }
     template<detail::unit_type other_unit_>
-    constexpr measure& operator-=(const measure<other_unit_>& rhs) noexcept requires(ops::is_convertible<unit, other_unit_>)
+    constexpr measure& operator-=(const measure<other_unit_>& rhs) noexcept requires(ops::is_convertible_v<unit, other_unit_>)
     { m_value -= convert<unit>(rhs).m_value; return *this; }
+    constexpr measure& operator*=(const type rhs) const noexcept { m_value *= rhs; return *this; }
+    constexpr measure& operator/=(const type rhs) const noexcept { m_value /= rhs; return *this; }
 
 private:
     type m_value;
 };
+
+template<detail::unit_type unit_>
+constexpr measure<unit_> operator*(const typename unit_::type lhs, const measure<unit_>& rhs) noexcept { return measure<unit_>{lhs * rhs.value()}; }
+template<detail::unit_type unit_>
+constexpr measure<unit_> operator/(const typename unit_::type lhs, const measure<unit_>& rhs) noexcept { return measure<unit_>{lhs / rhs.value()}; }
 
 // length
 using nanometers = measure<units::nanometers>;
@@ -421,6 +459,9 @@ using rps = rotations_per_second;
 using rotations_per_minute = measure<units::rotations_per_minute>;
 using rpm = rotations_per_minute;
 
+// linear acceleration
+using meters_per_second_squared = measure<units::meters_per_second_squared>;
+
 // torque
 using newton_meter = measure<units::newton_meter>;
 
@@ -434,40 +475,40 @@ using jkg_meters_squared = measure<units::jkg_meters_squared>;
 using rad_per_sec_per_volt = measure<units::rad_per_sec_per_volt>;
 using newton_meter_per_amp = measure<units::newton_meter_per_amp>;
 using volts_per_rad_per_sec = measure<units::volts_per_rad_per_sec>;
-using volts_per_rad_per_sec_per_sec = measure<units::volts_per_rad_per_sec_per_sec>;
+using volts_per_rad_per_sec_per_sec = measure<units::volts_per_rad_per_second_squared>;
 
 namespace literals {
 
-constexpr nanometers operator""_nm(const long double value) noexcept { return nanometers{value}; }
-constexpr micrometers operator""_um(const long double value) noexcept { return micrometers{value}; }
-constexpr millimeters operator""_mm(const long double value) noexcept { return millimeters{value}; }
-constexpr centimeters operator""_cm(const long double value) noexcept { return centimeters{value}; }
-constexpr meters operator""_m(const long double value) noexcept { return meters{value}; }
-constexpr kilometers operator""_km(const long double value) noexcept { return kilometers{value}; }
+constexpr nanometers operator""_nm(const long double value) noexcept { return nanometers{static_cast<math::floating_type>(value)}; }
+constexpr micrometers operator""_um(const long double value) noexcept { return micrometers{static_cast<math::floating_type>(value)}; }
+constexpr millimeters operator""_mm(const long double value) noexcept { return millimeters{static_cast<math::floating_type>(value)}; }
+constexpr centimeters operator""_cm(const long double value) noexcept { return centimeters{static_cast<math::floating_type>(value)}; }
+constexpr meters operator""_m(const long double value) noexcept { return meters{static_cast<math::floating_type>(value)}; }
+constexpr kilometers operator""_km(const long double value) noexcept { return kilometers{static_cast<math::floating_type>(value)}; }
 
-constexpr nanoseconds operator""_ns(const long double value) noexcept { return nanoseconds{value}; }
-constexpr microseconds operator""_us(const long double value) noexcept { return microseconds{value}; }
-constexpr milliseconds operator""_ms(const long double value) noexcept { return milliseconds{value}; }
-constexpr seconds operator""_s(const long double value) noexcept { return seconds{value}; }
-constexpr minutes operator""_min(const long double value) noexcept { return minutes{value}; }
-constexpr hours operator""_h(const long double value) noexcept { return hours{value}; }
+constexpr nanoseconds operator""_ns(const long double value) noexcept { return nanoseconds{static_cast<math::floating_type>(value)}; }
+constexpr microseconds operator""_us(const long double value) noexcept { return microseconds{static_cast<math::floating_type>(value)}; }
+constexpr milliseconds operator""_ms(const long double value) noexcept { return milliseconds{static_cast<math::floating_type>(value)}; }
+constexpr seconds operator""_s(const long double value) noexcept { return seconds{static_cast<math::floating_type>(value)}; }
+constexpr minutes operator""_min(const long double value) noexcept { return minutes{static_cast<math::floating_type>(value)}; }
+constexpr hours operator""_h(const long double value) noexcept { return hours{static_cast<math::floating_type>(value)}; }
 
-constexpr radians operator""_rad(const long double value) noexcept { return radians{value}; }
-constexpr degrees operator""_deg(const long double value) noexcept { return degrees{value}; }
-constexpr rotations operator""_rot(const long double value) noexcept { return rotations{value}; }
+constexpr radians operator""_rad(const long double value) noexcept { return radians{static_cast<math::floating_type>(value)}; }
+constexpr degrees operator""_deg(const long double value) noexcept { return degrees{static_cast<math::floating_type>(value)}; }
+constexpr rotations operator""_rot(const long double value) noexcept { return rotations{static_cast<math::floating_type>(value)}; }
 
-constexpr volts operator""_v(const long double value) noexcept { return volts{value}; }
+constexpr volts operator""_v(const long double value) noexcept { return volts{static_cast<math::floating_type>(value)}; }
 
-constexpr ampere operator""_amps(const long double value) noexcept { return ampere{value}; }
+constexpr ampere operator""_amps(const long double value) noexcept { return ampere{static_cast<math::floating_type>(value)}; }
 
-constexpr meters_per_second operator""_m_s(const long double value) noexcept { return meters_per_second{value}; }
-constexpr meters_per_second operator""_mps(const long double value) noexcept { return meters_per_second{value}; }
+constexpr meters_per_second operator""_m_s(const long double value) noexcept { return meters_per_second{static_cast<math::floating_type>(value)}; }
+constexpr meters_per_second operator""_mps(const long double value) noexcept { return meters_per_second{static_cast<math::floating_type>(value)}; }
 
-constexpr radians_per_second operator""_rad_s(const long double value) noexcept { return radians_per_second{value}; }
-constexpr degrees_per_second operator""_deg_s(const long double value) noexcept { return degrees_per_second{value}; }
-constexpr rotations_per_second operator""_rot_s(const long double value) noexcept { return rotations_per_second{value}; }
-constexpr rotations_per_second operator""_rps(const long double value) noexcept { return rotations_per_second{value}; }
-constexpr rotations_per_minute operator""_rpm(const long double value) noexcept { return rotations_per_minute{value}; }
+constexpr radians_per_second operator""_rad_s(const long double value) noexcept { return radians_per_second{static_cast<math::floating_type>(value)}; }
+constexpr degrees_per_second operator""_deg_s(const long double value) noexcept { return degrees_per_second{static_cast<math::floating_type>(value)}; }
+constexpr rotations_per_second operator""_rot_s(const long double value) noexcept { return rotations_per_second{static_cast<math::floating_type>(value)}; }
+constexpr rotations_per_second operator""_rps(const long double value) noexcept { return rotations_per_second{static_cast<math::floating_type>(value)}; }
+constexpr rotations_per_minute operator""_rpm(const long double value) noexcept { return rotations_per_minute{static_cast<math::floating_type>(value)}; }
 
 }
 
