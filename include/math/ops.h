@@ -19,6 +19,18 @@ constexpr units::measure<unit_> constrain(const units::measure<unit_>& value, co
 }
 
 template<units::unit_type unit_>
+constexpr integer_type signum(const units::measure<unit_>& value) {
+    if (value.value() > 0) {
+        return 1;
+    }
+    if (value.value() < 0) {
+        return -1;
+    }
+
+    return 0;
+}
+
+template<units::unit_type unit_>
 constexpr units::measure<unit_> abs(const units::measure<unit_>& value) {
     return units::measure<unit_>(std::abs(value.value()));
 }
@@ -31,6 +43,11 @@ constexpr units::measure<unit_> floor(const units::measure<unit_>& value) {
 template<units::unit_type unit_>
 constexpr units::measure<unit_> ceil(const units::measure<unit_>& value) {
     return units::measure<unit_>(std::ceil(value.value()));
+}
+
+template<units::unit_type unit_>
+constexpr floating_type exp(const units::measure<unit_>& value) {
+    return std::exp(value.value());
 }
 
 template<units::unit_of_category_type<units::category::angle> unit_>

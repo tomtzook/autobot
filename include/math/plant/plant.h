@@ -39,12 +39,12 @@ template<
     plant_system<type_, properties_, inputs_, states_, outputs_> system_>
 class plant final {
 public:
-    using plant_data = plant_data<type_, properties_, inputs_, states_, outputs_>;
-    using type = plant_data::type;
-    using property_mat = plant_data::property_mat;
-    using input_mat = plant_data::input_mat;
-    using state_mat = plant_data::state_mat;
-    using output_mat = plant_data::output_mat;
+    using data = plant_data<type_, properties_, inputs_, states_, outputs_>;
+    using type = data::type;
+    using property_mat = data::property_mat;
+    using input_mat = data::input_mat;
+    using state_mat = data::state_mat;
+    using output_mat = data::output_mat;
 
     plant() requires(std::is_default_constructible_v<system_>) : m_data() , m_system() {}
     explicit plant(system_&& system) : m_data(), m_system(system) {}
@@ -66,15 +66,15 @@ public:
     void update(const type dt) { m_system.update(m_data, dt); }
 
 private:
-    plant_data m_data;
+    data m_data;
     system_ m_system;
 };
 
 template<numeric type_, size_t properties_, size_t inputs_, size_t states_, size_t outputs_>
 class state_spaced_system {
 public:
-    using plant_data = plant_data<type_, properties_, inputs_, states_, outputs_>;
-    using type = plant_data::type;
+    using data = plant_data<type_, properties_, inputs_, states_, outputs_>;
+    using type = data::type;
     using mat_A = Eigen::Matrix<type, states_, states_>;
     using mat_B = Eigen::Matrix<type, states_, inputs_>;
     using mat_C = Eigen::Matrix<type, outputs_, states_>;
@@ -87,7 +87,7 @@ public:
         , m_D(D)
     {}
 
-    void update(plant_data& data, const type dt) {
+    void update(data& data, const type dt) {
         const auto d_state = m_A * data.m_state + m_B * data.m_input;
         data.m_output = m_C * data.m_state + m_D * data.m_input;
 

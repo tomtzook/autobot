@@ -17,15 +17,15 @@ set(SOURCES
         include/math/plant/plant.h
         include/math/plant/dc_motor.h
         include/math/control/pid.h
+        include/math/control/trapezoid_profile.h
+        include/math/ops.h
+        include/math/control/feed_forward.h
+        include/math/control/triangle_profile.h
         include/sim/dc_motor.h
         include/units.h
 
         src/math/plant/dc_motor.cpp
         src/sim/dc_motor.cpp
-        include/math/control/trapezoid_profile.h
-        include/math/ops.h
-        include/math/control/feed_forward.h
-        include/math/control/triangle_profile.h
 )
 
 add_library(autobot STATIC ${SOURCES})

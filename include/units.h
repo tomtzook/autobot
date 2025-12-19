@@ -308,6 +308,8 @@ struct measure : detail::measure_base_ {
     constexpr bool operator<=(const measure<other_unit_>& rhs) const noexcept requires(ops::is_convertible_v<unit, other_unit_>)
     { return m_value <= convert<unit>(rhs).m_value; };
 
+    constexpr measure operator-() const noexcept { return measure{-m_value}; }
+
     template<detail::unit_type other_unit_>
     constexpr measure operator+(const measure<other_unit_>& rhs) const noexcept requires(ops::is_convertible_v<unit, other_unit_>)
     { return measure{m_value + convert<unit>(rhs).m_value}; }
@@ -340,46 +342,53 @@ private:
 template<detail::unit_type unit_>
 constexpr measure<unit_> operator*(const typename unit_::type lhs, const measure<unit_>& rhs) noexcept { return measure<unit_>{lhs * rhs.value()}; }
 template<detail::unit_type unit_>
-constexpr measure<unit_> operator/(const typename unit_::type lhs, const measure<unit_>& rhs) noexcept { return measure<unit_>{lhs / rhs.value()}; }
+constexpr measure<unit_inverse<unit_>> operator/(const typename unit_::type lhs, const measure<unit_>& rhs) noexcept { return measure<unit_inverse<unit_>>{lhs / rhs.value()}; }
 
-#define create_unit(_name, ...) \
+#define create_unit(_name, _abr, ...) \
     namespace units { \
         using _name = __VA_ARGS__ ; \
     }\
-    template<> struct ::autobot::units::detail::unit_name< units::_name > { \
+    template<> struct detail::unit_name< units::_name > { \
         static constexpr auto name() noexcept { \
             return #_name; \
         }\
+        static constexpr auto abbreviation() noexcept { \
+            return #_abr; \
+        }\
     }; \
-    using _name = ::autobot::units::measure<units:: _name >;
+    using _name = measure<units:: _name >; \
+    namespace literals { \
+        constexpr _name operator""_ ##_abr (const long double value) noexcept { return _name {static_cast<math::floating_type>(value)}; } \
+    }
 
 // base units
-create_unit(meters, unit<math::floating_type, category::length, detail::converter<std::ratio<1>>>)
-create_unit(seconds, unit<math::floating_type, category::time, detail::converter<std::ratio<1>>>)
-create_unit(radians, unit<math::floating_type, category::angle, detail::converter<std::ratio<1>>>)
-create_unit(volts, unit<math::floating_type, category::voltage, detail::converter<std::ratio<1>>>)
-create_unit(ampere, unit<math::floating_type, category::current, detail::converter<std::ratio<1>>>)
-create_unit(kilogram, unit<math::floating_type, category::mass, detail::converter<std::ratio<1>>>)
-create_unit(newton, unit<math::floating_type, category::force, detail::converter<std::ratio<1>>>)
-create_unit(joule, unit<math::floating_type, category::energy, detail::converter<std::ratio<1>>>)
+create_unit(meters, m, unit<math::floating_type, category::length, detail::converter<std::ratio<1>>>)
+create_unit(seconds, sec, unit<math::floating_type, category::time, detail::converter<std::ratio<1>>>)
+create_unit(radians, rad, unit<math::floating_type, category::angle, detail::converter<std::ratio<1>>>)
+create_unit(volts, volt, unit<math::floating_type, category::voltage, detail::converter<std::ratio<1>>>)
+create_unit(ampere, amp, unit<math::floating_type, category::current, detail::converter<std::ratio<1>>>)
+create_unit(kilogram, kg, unit<math::floating_type, category::mass, detail::converter<std::ratio<1>>>)
+create_unit(newton, nt, unit<math::floating_type, category::force, detail::converter<std::ratio<1>>>)
+create_unit(joule, jl, unit<math::floating_type, category::energy, detail::converter<std::ratio<1>>>)
+
 
 // length
-create_unit(nanometers, derived_unit<meters, detail::converter<std::nano>>)
-create_unit(micrometers, derived_unit<meters, detail::converter<std::micro>>)
-create_unit(millimeters, derived_unit<meters, detail::converter<std::milli>>)
-create_unit(centimeters, derived_unit<meters, detail::converter<std::centi>>)
-create_unit(kilometers, derived_unit<meters, detail::converter<std::kilo>>)
+create_unit(nanometers, nm, derived_unit<meters, detail::converter<std::nano>>)
+create_unit(micrometers, um, derived_unit<meters, detail::converter<std::micro>>)
+create_unit(millimeters, mm, derived_unit<meters, detail::converter<std::milli>>)
+create_unit(centimeters, cm, derived_unit<meters, detail::converter<std::centi>>)
+create_unit(kilometers, km, derived_unit<meters, detail::converter<std::kilo>>)
 
 // time
-create_unit(nanoseconds, derived_unit<seconds, detail::converter<std::nano>>)
-create_unit(microseconds, derived_unit<seconds, detail::converter<std::micro>>)
-create_unit(milliseconds, derived_unit<seconds, detail::converter<std::milli>>)
-create_unit(minutes, derived_unit<seconds, detail::converter<std::ratio<60>>>)
-create_unit(hours, derived_unit<seconds, detail::converter<std::ratio<3600>>>)
+create_unit(nanoseconds, ns, derived_unit<seconds, detail::converter<std::nano>>)
+create_unit(microseconds, us, derived_unit<seconds, detail::converter<std::micro>>)
+create_unit(milliseconds, ms, derived_unit<seconds, detail::converter<std::milli>>)
+create_unit(minutes, min, derived_unit<seconds, detail::converter<std::ratio<60>>>)
+create_unit(hours, hour, derived_unit<seconds, detail::converter<std::ratio<3600>>>)
 
 // angle
-create_unit(degrees, derived_unit<radians, detail::converter<std::ratio<1, 180>, std::ratio<1>>>)
-create_unit(rotations, derived_unit<radians, detail::converter<std::ratio<2>, std::ratio<1>>>)
+create_unit(degrees, deg, derived_unit<radians, detail::converter<std::ratio<1, 180>, std::ratio<1>>>)
+create_unit(rotations, rot, derived_unit<radians, detail::converter<std::ratio<2>, std::ratio<1>>>)
 
 // volts
 
@@ -397,78 +406,41 @@ using amps = ampere;
 
 
 // linear velocity
-create_unit(meters_per_second, compound_unit<meters, unit_inverse<seconds>>)
+create_unit(meters_per_second, mps, compound_unit<meters, unit_inverse<seconds>>)
 
 // angular velocity
-create_unit(radians_per_second, compound_unit<radians, unit_inverse<seconds>>);
-create_unit(degrees_per_second, compound_unit<degrees, unit_inverse<seconds>>);
-create_unit(rotations_per_second, compound_unit<rotations, unit_inverse<seconds>>);
-create_unit(rotations_per_minute, compound_unit<rotations, unit_inverse<minutes>>);
+create_unit(radians_per_second, rad_per_s, compound_unit<radians, unit_inverse<seconds>>);
+create_unit(degrees_per_second, deg_per_s, compound_unit<degrees, unit_inverse<seconds>>);
+create_unit(rotations_per_second, rps, compound_unit<rotations, unit_inverse<seconds>>);
+create_unit(rotations_per_minute, rpm, compound_unit<rotations, unit_inverse<minutes>>);
 
 using rps = rotations_per_second;
 using rpm = rotations_per_minute;
 
 // linear acceleration
-create_unit(meters_per_second_squared, compound_unit<meters_per_second, unit_inverse<seconds>>)
+create_unit(meters_per_second_squared, mps_sq, compound_unit<meters_per_second, unit_inverse<seconds>>)
 
 // angular acceleration
-create_unit(radians_per_second_squared, compound_unit<radians_per_second, unit_inverse<seconds>>);
-create_unit(degrees_per_second_squared, compound_unit<degrees_per_second, unit_inverse<seconds>>);
-create_unit(rotations_per_second_squared, compound_unit<rotations_per_second, unit_inverse<seconds>>);
-create_unit(rotations_per_minute_per_second, compound_unit<rotations_per_minute, unit_inverse<seconds>>)
+create_unit(radians_per_second_squared, rad_per_sq, compound_unit<radians_per_second, unit_inverse<seconds>>);
+create_unit(degrees_per_second_squared, deg_per_sq, compound_unit<degrees_per_second, unit_inverse<seconds>>);
+create_unit(rotations_per_second_squared, rot_per_sq, compound_unit<rotations_per_second, unit_inverse<seconds>>);
+create_unit(rotations_per_minute_per_second, rpm_sec, compound_unit<rotations_per_minute, unit_inverse<seconds>>)
 
 // resistence
-create_unit(ohm, compound_unit<volts, unit_inverse<ampere>>);
+create_unit(ohm, ohm, compound_unit<volts, unit_inverse<ampere>>);
 
 // torque
-// todo: fix
-// create_unit(newton_meter, compound_unit<newton, meters>);
-namespace units { using newton_meter = joule; }
-using newton_meter = joule;
+create_unit(newton_meter, ntm, derived_unit<joule, detail::converter<std::ratio<1>>>);
 
 // moment of inertia
-create_unit(jkg_meters_squared, compound_unit<joule, kilogram, unit_squared<meters>>);
+create_unit(jkg_meters_squared, jkg_msq, compound_unit<joule, kilogram, unit_squared<meters>>);
 
 // other
-create_unit(rad_per_sec_per_volt, compound_unit<radians_per_second, unit_inverse<volts>>);
-create_unit(newton_meter_per_amp, compound_unit<newton_meter, unit_inverse<ampere>>);
-create_unit(volts_per_rad_per_sec, compound_unit<volts, unit_inverse<radians_per_second>>)
-create_unit(volts_per_rad_per_second_squared, compound_unit<volts, unit_inverse<radians_per_second_squared>>)
+create_unit(rad_per_sec_per_volt, rad_per_s_per_v, compound_unit<radians_per_second, unit_inverse<volts>>);
+create_unit(newton_meter_per_amp, ntm_per_amp, compound_unit<newton_meter, unit_inverse<ampere>>);
+create_unit(volts_per_rad_per_sec, volt_per_rad_per_s, compound_unit<volts, unit_inverse<radians_per_second>>)
+create_unit(volts_per_rad_per_second_squared, volt_per_rad_per_sq, compound_unit<volts, unit_inverse<radians_per_second_squared>>)
 
-namespace literals {
-
-constexpr nanometers operator""_nm(const long double value) noexcept { return nanometers{static_cast<math::floating_type>(value)}; }
-constexpr micrometers operator""_um(const long double value) noexcept { return micrometers{static_cast<math::floating_type>(value)}; }
-constexpr millimeters operator""_mm(const long double value) noexcept { return millimeters{static_cast<math::floating_type>(value)}; }
-constexpr centimeters operator""_cm(const long double value) noexcept { return centimeters{static_cast<math::floating_type>(value)}; }
-constexpr meters operator""_m(const long double value) noexcept { return meters{static_cast<math::floating_type>(value)}; }
-constexpr kilometers operator""_km(const long double value) noexcept { return kilometers{static_cast<math::floating_type>(value)}; }
-
-constexpr nanoseconds operator""_ns(const long double value) noexcept { return nanoseconds{static_cast<math::floating_type>(value)}; }
-constexpr microseconds operator""_us(const long double value) noexcept { return microseconds{static_cast<math::floating_type>(value)}; }
-constexpr milliseconds operator""_ms(const long double value) noexcept { return milliseconds{static_cast<math::floating_type>(value)}; }
-constexpr seconds operator""_s(const long double value) noexcept { return seconds{static_cast<math::floating_type>(value)}; }
-constexpr minutes operator""_min(const long double value) noexcept { return minutes{static_cast<math::floating_type>(value)}; }
-constexpr hours operator""_h(const long double value) noexcept { return hours{static_cast<math::floating_type>(value)}; }
-
-constexpr radians operator""_rad(const long double value) noexcept { return radians{static_cast<math::floating_type>(value)}; }
-constexpr degrees operator""_deg(const long double value) noexcept { return degrees{static_cast<math::floating_type>(value)}; }
-constexpr rotations operator""_rot(const long double value) noexcept { return rotations{static_cast<math::floating_type>(value)}; }
-
-constexpr volts operator""_v(const long double value) noexcept { return volts{static_cast<math::floating_type>(value)}; }
-
-constexpr ampere operator""_amps(const long double value) noexcept { return ampere{static_cast<math::floating_type>(value)}; }
-
-constexpr meters_per_second operator""_m_s(const long double value) noexcept { return meters_per_second{static_cast<math::floating_type>(value)}; }
-constexpr meters_per_second operator""_mps(const long double value) noexcept { return meters_per_second{static_cast<math::floating_type>(value)}; }
-
-constexpr radians_per_second operator""_rad_s(const long double value) noexcept { return radians_per_second{static_cast<math::floating_type>(value)}; }
-constexpr degrees_per_second operator""_deg_s(const long double value) noexcept { return degrees_per_second{static_cast<math::floating_type>(value)}; }
-constexpr rotations_per_second operator""_rot_s(const long double value) noexcept { return rotations_per_second{static_cast<math::floating_type>(value)}; }
-constexpr rotations_per_second operator""_rps(const long double value) noexcept { return rotations_per_second{static_cast<math::floating_type>(value)}; }
-constexpr rotations_per_minute operator""_rpm(const long double value) noexcept { return rotations_per_minute{static_cast<math::floating_type>(value)}; }
-
-}
 
 }
 

@@ -19,7 +19,7 @@ public:
         velocity_type velocity;
     };
 
-    triangle_profile(velocity_type max_velocity, acceleration_type max_acceleration);
+    triangle_profile(const velocity_type& max_velocity, const acceleration_type& max_acceleration);
 
     state calculate(const type& target_position, units::seconds current_time);
 
@@ -29,7 +29,7 @@ private:
 };
 
 template<units::unit_of_category_type<units::category::length, units::category::angle> unit_>
-triangle_profile<unit_>::triangle_profile(velocity_type max_velocity, acceleration_type max_acceleration)
+triangle_profile<unit_>::triangle_profile(const velocity_type& max_velocity, const acceleration_type& max_acceleration)
     : m_max_vel(max_velocity) , m_max_accel(max_acceleration)
 {}
 
