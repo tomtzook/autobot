@@ -9,17 +9,17 @@ namespace autobot::math {
 template<units::unit_of_category_type<units::category::length, units::category::angle> unit_>
 class simple_feed_forward {
 public:
-    using unit = units::underlying_unit<unit_>::type;
-    using velocity_unit = units::compound_unit<unit, units::unit_inverse<units::units::seconds>>;
-    using acceleration_unit = units::compound_unit<velocity_unit, units::unit_inverse<units::units::seconds>>;
+    using unit = units_actual(unit_);
+    using velocity_unit = units_per_second(unit);
+    using acceleration_unit = units_per_second(velocity_unit);
     using raw_type = unit::type;
     using type = units::measure<unit>;
     using velocity_type = units::measure<velocity_unit>;
     using acceleration_type = units::measure<acceleration_unit>;
 
     using static_gain = units::volts;
-    using velocity_gain = units::measure<units::compound_unit<units::units::volts, units::unit_inverse<velocity_unit>>>;
-    using acceleration_gain = units::measure<units::compound_unit<units::units::volts, units::unit_inverse<acceleration_unit>>>;
+    using velocity_gain = units::measure<units_per(units::units::volts, velocity_unit)>;
+    using acceleration_gain = units::measure<units_per(units::units::volts, acceleration_unit)>;
 
     static constexpr auto min_acceleration_gain = acceleration_gain(1e-9);
     static constexpr auto neg_min_time = units::measure<units::unit_inverse<units::units::seconds>>(-1e-9);

@@ -344,7 +344,7 @@ constexpr measure<unit_> operator*(const typename unit_::type lhs, const measure
 template<detail::unit_type unit_>
 constexpr measure<unit_inverse<unit_>> operator/(const typename unit_::type lhs, const measure<unit_>& rhs) noexcept { return measure<unit_inverse<unit_>>{lhs / rhs.value()}; }
 
-#define create_unit(_name, _abr, ...) \
+#define units_create(_name, _abr, ...) \
     namespace units { \
         using _name = __VA_ARGS__ ; \
     }\
@@ -361,34 +361,39 @@ constexpr measure<unit_inverse<unit_>> operator/(const typename unit_::type lhs,
         constexpr _name operator""_ ##_abr (const long double value) noexcept { return _name {static_cast<math::floating_type>(value)}; } \
     }
 
+#define units_actual(_unit) ::autobot::units::underlying_unit<_unit>::type
+#define units_by(_base_unit, _by_unit) ::autobot::units::compound_unit<typename units_actual(_base_unit), typename units_actual(_by_unit)>
+#define units_per(_base_unit, _per_unit) ::autobot::units::compound_unit<typename units_actual(_base_unit), ::autobot::units::unit_inverse<typename units_actual(_per_unit)>>
+#define units_per_second(_base_unit) units_per(_base_unit, ::autobot::units::units::seconds)
+
 // base units
-create_unit(meters, m, unit<math::floating_type, category::length, detail::converter<std::ratio<1>>>)
-create_unit(seconds, sec, unit<math::floating_type, category::time, detail::converter<std::ratio<1>>>)
-create_unit(radians, rad, unit<math::floating_type, category::angle, detail::converter<std::ratio<1>>>)
-create_unit(volts, volt, unit<math::floating_type, category::voltage, detail::converter<std::ratio<1>>>)
-create_unit(ampere, amp, unit<math::floating_type, category::current, detail::converter<std::ratio<1>>>)
-create_unit(kilogram, kg, unit<math::floating_type, category::mass, detail::converter<std::ratio<1>>>)
-create_unit(newton, nt, unit<math::floating_type, category::force, detail::converter<std::ratio<1>>>)
-create_unit(joule, jl, unit<math::floating_type, category::energy, detail::converter<std::ratio<1>>>)
+units_create(meters, m, unit<math::floating_type, category::length, detail::converter<std::ratio<1>>>)
+units_create(seconds, sec, unit<math::floating_type, category::time, detail::converter<std::ratio<1>>>)
+units_create(radians, rad, unit<math::floating_type, category::angle, detail::converter<std::ratio<1>>>)
+units_create(volts, volt, unit<math::floating_type, category::voltage, detail::converter<std::ratio<1>>>)
+units_create(ampere, amp, unit<math::floating_type, category::current, detail::converter<std::ratio<1>>>)
+units_create(kilogram, kg, unit<math::floating_type, category::mass, detail::converter<std::ratio<1>>>)
+units_create(newton, nt, unit<math::floating_type, category::force, detail::converter<std::ratio<1>>>)
+units_create(joule, jl, unit<math::floating_type, category::energy, detail::converter<std::ratio<1>>>)
 
 
 // length
-create_unit(nanometers, nm, derived_unit<meters, detail::converter<std::nano>>)
-create_unit(micrometers, um, derived_unit<meters, detail::converter<std::micro>>)
-create_unit(millimeters, mm, derived_unit<meters, detail::converter<std::milli>>)
-create_unit(centimeters, cm, derived_unit<meters, detail::converter<std::centi>>)
-create_unit(kilometers, km, derived_unit<meters, detail::converter<std::kilo>>)
+units_create(nanometers, nm, derived_unit<meters, detail::converter<std::nano>>)
+units_create(micrometers, um, derived_unit<meters, detail::converter<std::micro>>)
+units_create(millimeters, mm, derived_unit<meters, detail::converter<std::milli>>)
+units_create(centimeters, cm, derived_unit<meters, detail::converter<std::centi>>)
+units_create(kilometers, km, derived_unit<meters, detail::converter<std::kilo>>)
 
 // time
-create_unit(nanoseconds, ns, derived_unit<seconds, detail::converter<std::nano>>)
-create_unit(microseconds, us, derived_unit<seconds, detail::converter<std::micro>>)
-create_unit(milliseconds, ms, derived_unit<seconds, detail::converter<std::milli>>)
-create_unit(minutes, min, derived_unit<seconds, detail::converter<std::ratio<60>>>)
-create_unit(hours, hour, derived_unit<seconds, detail::converter<std::ratio<3600>>>)
+units_create(nanoseconds, ns, derived_unit<seconds, detail::converter<std::nano>>)
+units_create(microseconds, us, derived_unit<seconds, detail::converter<std::micro>>)
+units_create(milliseconds, ms, derived_unit<seconds, detail::converter<std::milli>>)
+units_create(minutes, min, derived_unit<seconds, detail::converter<std::ratio<60>>>)
+units_create(hours, hour, derived_unit<seconds, detail::converter<std::ratio<3600>>>)
 
 // angle
-create_unit(degrees, deg, derived_unit<radians, detail::converter<std::ratio<1, 180>, std::ratio<1>>>)
-create_unit(rotations, rot, derived_unit<radians, detail::converter<std::ratio<2>, std::ratio<1>>>)
+units_create(degrees, deg, derived_unit<radians, detail::converter<std::ratio<1, 180>, std::ratio<1>>>)
+units_create(rotations, rot, derived_unit<radians, detail::converter<std::ratio<2>, std::ratio<1>>>)
 
 // volts
 
@@ -406,40 +411,40 @@ using amps = ampere;
 
 
 // linear velocity
-create_unit(meters_per_second, mps, compound_unit<meters, unit_inverse<seconds>>)
+units_create(meters_per_second, mps, compound_unit<meters, unit_inverse<seconds>>)
 
 // angular velocity
-create_unit(radians_per_second, rad_per_s, compound_unit<radians, unit_inverse<seconds>>);
-create_unit(degrees_per_second, deg_per_s, compound_unit<degrees, unit_inverse<seconds>>);
-create_unit(rotations_per_second, rps, compound_unit<rotations, unit_inverse<seconds>>);
-create_unit(rotations_per_minute, rpm, compound_unit<rotations, unit_inverse<minutes>>);
+units_create(radians_per_second, rad_per_s, compound_unit<radians, unit_inverse<seconds>>);
+units_create(degrees_per_second, deg_per_s, compound_unit<degrees, unit_inverse<seconds>>);
+units_create(rotations_per_second, rps, compound_unit<rotations, unit_inverse<seconds>>);
+units_create(rotations_per_minute, rpm, compound_unit<rotations, unit_inverse<minutes>>);
 
 using rps = rotations_per_second;
 using rpm = rotations_per_minute;
 
 // linear acceleration
-create_unit(meters_per_second_squared, mps_sq, compound_unit<meters_per_second, unit_inverse<seconds>>)
+units_create(meters_per_second_squared, mps_sq, compound_unit<meters_per_second, unit_inverse<seconds>>)
 
 // angular acceleration
-create_unit(radians_per_second_squared, rad_per_sq, compound_unit<radians_per_second, unit_inverse<seconds>>);
-create_unit(degrees_per_second_squared, deg_per_sq, compound_unit<degrees_per_second, unit_inverse<seconds>>);
-create_unit(rotations_per_second_squared, rot_per_sq, compound_unit<rotations_per_second, unit_inverse<seconds>>);
-create_unit(rotations_per_minute_per_second, rpm_sec, compound_unit<rotations_per_minute, unit_inverse<seconds>>)
+units_create(radians_per_second_squared, rad_per_sq, compound_unit<radians_per_second, unit_inverse<seconds>>);
+units_create(degrees_per_second_squared, deg_per_sq, compound_unit<degrees_per_second, unit_inverse<seconds>>);
+units_create(rotations_per_second_squared, rot_per_sq, compound_unit<rotations_per_second, unit_inverse<seconds>>);
+units_create(rotations_per_minute_per_second, rpm_sec, compound_unit<rotations_per_minute, unit_inverse<seconds>>)
 
 // resistence
-create_unit(ohm, ohm, compound_unit<volts, unit_inverse<ampere>>);
+units_create(ohm, ohm, compound_unit<volts, unit_inverse<ampere>>);
 
 // torque
-create_unit(newton_meter, ntm, derived_unit<joule, detail::converter<std::ratio<1>>>);
+units_create(newton_meter, ntm, derived_unit<joule, detail::converter<std::ratio<1>>>);
 
 // moment of inertia
-create_unit(jkg_meters_squared, jkg_msq, compound_unit<joule, kilogram, unit_squared<meters>>);
+units_create(jkg_meters_squared, jkg_msq, compound_unit<joule, kilogram, unit_squared<meters>>);
 
 // other
-create_unit(rad_per_sec_per_volt, rad_per_s_per_v, compound_unit<radians_per_second, unit_inverse<volts>>);
-create_unit(newton_meter_per_amp, ntm_per_amp, compound_unit<newton_meter, unit_inverse<ampere>>);
-create_unit(volts_per_rad_per_sec, volt_per_rad_per_s, compound_unit<volts, unit_inverse<radians_per_second>>)
-create_unit(volts_per_rad_per_second_squared, volt_per_rad_per_sq, compound_unit<volts, unit_inverse<radians_per_second_squared>>)
+units_create(rad_per_sec_per_volt, rad_per_s_per_v, compound_unit<radians_per_second, unit_inverse<volts>>);
+units_create(newton_meter_per_amp, ntm_per_amp, compound_unit<newton_meter, unit_inverse<ampere>>);
+units_create(volts_per_rad_per_sec, volt_per_rad_per_s, compound_unit<volts, unit_inverse<radians_per_second>>)
+units_create(volts_per_rad_per_second_squared, volt_per_rad_per_sq, compound_unit<volts, unit_inverse<radians_per_second_squared>>)
 
 
 }
