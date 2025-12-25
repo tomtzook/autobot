@@ -1,6 +1,7 @@
 #pragma once
 
 #include <ratio>
+#include <chrono>
 
 #include "math/common.h"
 
@@ -265,6 +266,11 @@ constexpr auto convert(const measure<src_unit_>& src) noexcept {
     return ops::convert<typename underlying_unit<dst_unit_>::type, src_unit_>(src);
 }
 
+template<typename chrono_rep_, typename chrono_per_>
+constexpr auto from(const std::chrono::duration<chrono_rep_, chrono_per_>& src) noexcept {
+    return measure<unit<math::floating_type, category::time, detail::converter<chrono_per_>>>(src.count());
+}
+
 template<detail::unit_type unit_>
 struct measure : detail::measure_base_ {
     using unit = unit_;
@@ -323,8 +329,10 @@ struct measure : detail::measure_base_ {
     constexpr measure<compound_unit<unit, unit_inverse<other_unit_>>> operator/(const measure<other_unit_>& rhs) const noexcept requires(!ops::is_convertible_v<unit, other_unit_>)
     { return measure<compound_unit<unit, unit_inverse<other_unit_>>>{m_value / rhs.value()}; }
 
-    constexpr measure operator*(const type rhs) const noexcept { return measure{m_value * rhs}; }
-    constexpr measure operator/(const type& rhs) const noexcept { return measure{m_value / rhs}; }
+    template<math::numeric raw_t_>
+    constexpr measure operator*(const raw_t_ rhs) const noexcept { return measure{m_value * rhs}; }
+    template<math::numeric raw_t_>
+    constexpr measure operator/(const raw_t_& rhs) const noexcept { return measure{m_value / rhs}; }
 
     template<detail::unit_type other_unit_>
     constexpr measure& operator+=(const measure<other_unit_>& rhs) noexcept requires(ops::is_convertible_v<unit, other_unit_>)
@@ -443,6 +451,7 @@ units_create(jkg_meters_squared, jkg_msq, compound_unit<joule, kilogram, unit_sq
 // other
 units_create(rad_per_sec_per_volt, rad_per_s_per_v, compound_unit<radians_per_second, unit_inverse<volts>>);
 units_create(newton_meter_per_amp, ntm_per_amp, compound_unit<newton_meter, unit_inverse<ampere>>);
+units_create(volts_per_rad, volt_per_rad, compound_unit<volts, unit_inverse<radians>>)
 units_create(volts_per_rad_per_sec, volt_per_rad_per_s, compound_unit<volts, unit_inverse<radians_per_second>>)
 units_create(volts_per_rad_per_second_squared, volt_per_rad_per_sq, compound_unit<volts, unit_inverse<radians_per_second_squared>>)
 

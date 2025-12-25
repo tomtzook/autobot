@@ -17,6 +17,7 @@ public:
     struct state {
         type position;
         velocity_type velocity;
+        bool finished;
     };
 
     trapezoid_profile(const velocity_type& max_velocity, const acceleration_type& max_acceleration);
@@ -38,14 +39,15 @@ trapezoid_profile<unit_>::state trapezoid_profile<unit_>::calculate(const type& 
     const auto acceleration_time = m_max_vel / m_max_accel;
     const auto distance_passed_in_accel = m_max_accel * acceleration_time * acceleration_time * 0.5;
     const auto distance_passed_in_cruise = target_position - 2 * distance_passed_in_accel;
-    const auto cruise_time = distance_passed_in_accel / m_max_vel;
+    const auto cruise_time = distance_passed_in_cruise / m_max_vel;
 
     if (current_time <= acceleration_time) {
         // acceleration phase
         const auto time_in_phase = current_time;
         return {
             m_max_accel * time_in_phase * time_in_phase * 0.5,
-            m_max_accel * time_in_phase
+            m_max_accel * time_in_phase,
+            false
         };
     }
 
@@ -54,7 +56,8 @@ trapezoid_profile<unit_>::state trapezoid_profile<unit_>::calculate(const type& 
         const auto time_in_phase = current_time - acceleration_time;
         return {
             distance_passed_in_accel + m_max_vel * time_in_phase,
-            m_max_vel
+            m_max_vel,
+            false
         };
     }
 
@@ -63,13 +66,15 @@ trapezoid_profile<unit_>::state trapezoid_profile<unit_>::calculate(const type& 
         const auto time_in_phase = current_time - acceleration_time - cruise_time;
         return {
             (distance_passed_in_accel + distance_passed_in_cruise) + (m_max_vel * time_in_phase) - (m_max_accel * time_in_phase * time_in_phase * 0.5),
-            m_max_vel - m_max_accel * time_in_phase
+            m_max_vel - m_max_accel * time_in_phase,
+            false
         };
     }
 
     return {
         target_position,
-        velocity_type(0)
+        velocity_type(0),
+        true
     };
 }
 
