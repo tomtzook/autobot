@@ -32,13 +32,13 @@ void entry::set(const std::string_view name, const obsr::value& value) {
     m_nodes.emplace(name, std::move(node));
 }
 
-void entry::add(const std::string_view name, getter_func&& getter) {
+void entry::add(const std::string_view name, getter_func&& getter, setter_func&& setter) {
     if (const auto it = m_nodes.find(name); it != m_nodes.end()) {
         throw std::runtime_error("name already taken");
     }
 
     const auto entry = obsr::get_entry(m_object, name);
-    node node(entry, std::move(getter));
+    node node(entry, std::move(getter), std::move(setter));
     m_nodes.emplace(name, std::move(node));
 }
 
@@ -48,10 +48,16 @@ void entry::refresh() {
             continue;
         }
 
-        if (auto opt_value = node.getter(node.last_value)) {
+        if (auto opt_value = node.getter ? node.getter(node.last_value) : std::nullopt) {
             auto& new_value = opt_value.value();
             obsr::set_value(node.entry, new_value);
             node.last_value = new_value;
+        } else if (node.setter) {
+            auto new_value = obsr::get_value(node.entry);
+            if (node.last_value != new_value) {
+                node.setter(new_value);
+                node.last_value = new_value;
+            }
         }
     }
 }
@@ -65,12 +71,14 @@ entry::node::node()
     : entry(obsr::empty_handle)
     , last_value(obsr::value::make())
     , getter()
+    , setter()
 {}
 
-entry::node::node(const obsr::entry entry, getter_func&& getter)
+entry::node::node(const obsr::entry entry, getter_func&& getter, setter_func&& setter)
     : entry(entry)
     , last_value(obsr::value::make())
     , getter(std::move(getter))
+    , setter(std::move(setter))
 {}
 
 entry_ref::entry_ref()
@@ -123,48 +131,104 @@ void entry_ref::set_string(const std::string_view name, const std::string_view v
     m_entry->set(name, obsr::value::make_string(value));
 }
 
-void entry_ref::add_bool(const std::string_view name, std::function<bool()>&& getter) {
-    m_entry->add(name, [getter](const auto& last_value)-> std::optional<obsr::value> {
-        const auto current_value = getter();
-        if (last_value.get_type() != obsr::value_type::boolean || last_value.get_boolean() != current_value) {
-            return obsr::value::make_boolean(current_value);
-        }
+void entry_ref::add_bool(const std::string_view name, std::function<bool()>&& getter, std::function<void(bool)>&& setter) {
+    entry::getter_func getter_func = nullptr;
+    entry::setter_func setter_func = nullptr;
 
-        return std::nullopt;
-    });
+    if (getter) {
+        getter_func = [getter](const auto& last_value)-> std::optional<obsr::value> {
+            const auto current_value = getter();
+            if (last_value.get_type() != obsr::value_type::boolean || last_value.get_boolean() != current_value) {
+                return obsr::value::make_boolean(current_value);
+            }
+
+            return std::nullopt;
+        };
+    }
+    if (setter) {
+        setter_func = [setter](const auto& new_value)-> void {
+            if (new_value.get_type() == obsr::value_type::boolean) {
+                setter(new_value.get_boolean());
+            }
+        };
+    }
+
+    m_entry->add(name, std::move(getter_func), std::move(setter_func));
 }
 
-void entry_ref::add_int32(const std::string_view name, std::function<int32_t()>&& getter) {
-    m_entry->add(name, [getter](const auto& last_value)-> std::optional<obsr::value> {
-        const auto current_value = getter();
-        if (last_value.get_type() != obsr::value_type::integer32 || last_value.get_int32() != current_value) {
-            return obsr::value::make_int32(current_value);
-        }
+void entry_ref::add_int32(const std::string_view name, std::function<int32_t()>&& getter, std::function<void(int32_t)>&& setter) {
+    entry::getter_func getter_func = nullptr;
+    entry::setter_func setter_func = nullptr;
 
-        return std::nullopt;
-    });
+    if (getter) {
+        getter_func = [getter](const auto& last_value)-> std::optional<obsr::value> {
+            const auto current_value = getter();
+            if (last_value.get_type() != obsr::value_type::integer32 || last_value.get_int32() != current_value) {
+                return obsr::value::make_int32(current_value);
+            }
+
+            return std::nullopt;
+        };
+    }
+    if (setter) {
+        setter_func = [setter](const auto& new_value)-> void {
+            if (new_value.get_type() == obsr::value_type::integer32) {
+                setter(new_value.get_int32());
+            }
+        };
+    }
+
+    m_entry->add(name, std::move(getter_func), std::move(setter_func));
 }
 
-void entry_ref::add_float(const std::string_view name, std::function<float()>&& getter) {
-    m_entry->add(name, [getter](const auto& last_value)-> std::optional<obsr::value> {
-        const auto current_value = getter();
-        if (last_value.get_type() != obsr::value_type::floating_point32 || last_value.get_float() != current_value) {
-            return obsr::value::make_float(current_value);
-        }
+void entry_ref::add_float(const std::string_view name, std::function<float()>&& getter, std::function<void(float)>&& setter) {
+    entry::getter_func getter_func = nullptr;
+    entry::setter_func setter_func = nullptr;
 
-        return std::nullopt;
-    });
+    if (getter) {
+        getter_func = [getter](const auto& last_value)-> std::optional<obsr::value> {
+            const auto current_value = getter();
+            if (last_value.get_type() != obsr::value_type::floating_point32 || last_value.get_float() != current_value) {
+                return obsr::value::make_float(current_value);
+            }
+
+            return std::nullopt;
+        };
+    }
+    if (setter) {
+        setter_func = [setter](const auto& new_value)-> void {
+            if (new_value.get_type() == obsr::value_type::floating_point32) {
+                setter(new_value.get_float());
+            }
+        };
+    }
+
+    m_entry->add(name, std::move(getter_func), std::move(setter_func));
 }
 
-void entry_ref::add_double(const std::string_view name, std::function<double()>&& getter) {
-    m_entry->add(name, [getter](const auto& last_value)-> std::optional<obsr::value> {
-        const auto current_value = getter();
-        if (last_value.get_type() != obsr::value_type::floating_point64 || last_value.get_double() != current_value) {
-            return obsr::value::make_double(current_value);
-        }
+void entry_ref::add_double(const std::string_view name, std::function<double()>&& getter, std::function<void(double)>&& setter) {
+    entry::getter_func getter_func = nullptr;
+    entry::setter_func setter_func = nullptr;
 
-        return std::nullopt;
-    });
+    if (getter) {
+        getter_func = [getter](const auto& last_value)-> std::optional<obsr::value> {
+            const auto current_value = getter();
+            if (last_value.get_type() != obsr::value_type::floating_point64 || last_value.get_double() != current_value) {
+                return obsr::value::make_double(current_value);
+            }
+
+            return std::nullopt;
+        };
+    }
+    if (setter) {
+        setter_func = [setter](const auto& new_value)-> void {
+            if (new_value.get_type() == obsr::value_type::floating_point64) {
+                setter(new_value.get_double());
+            }
+        };
+    }
+
+    m_entry->add(name, std::move(getter_func), std::move(setter_func));
 }
 
 registry::registry()

@@ -23,6 +23,7 @@ concept displayable = requires(t_ t, bind&& f1_bind) {
 class entry {
 public:
     using getter_func = std::function<std::optional<obsr::value>(obsr::value&)>;
+    using setter_func = std::function<void(obsr::value&)>;
 
     entry();
     explicit entry(obsr::object object);
@@ -35,19 +36,20 @@ public:
     bool operator==(const entry&) const;
 
     void set(std::string_view name, const obsr::value& value);
-    void add(std::string_view name, getter_func&& getter);
+    void add(std::string_view name, getter_func&& getter, setter_func&& setter);
     void refresh();
     void delete_object();
 
 private:
     struct node {
         node();
-        node(obsr::entry entry, getter_func&& getter);
+        node(obsr::entry entry, getter_func&& getter, setter_func&& setter);
 
         obsr::entry entry;
         obsr::value last_value;
 
         getter_func getter;
+        setter_func setter;
     };
 
     obsr::object m_object;
@@ -76,10 +78,10 @@ public:
     void set_double(std::string_view name, double value);
     void set_string(std::string_view name, std::string_view value);
 
-    void add_bool(std::string_view name, std::function<bool()>&& getter);
-    void add_int32(std::string_view name, std::function<int32_t()>&& getter);
-    void add_float(std::string_view name, std::function<float()>&& getter);
-    void add_double(std::string_view name, std::function<double()>&& getter);
+    void add_bool(std::string_view name, std::function<bool()>&& getter, std::function<void(bool)>&& setter);
+    void add_int32(std::string_view name, std::function<int32_t()>&& getter, std::function<void(int32_t)>&& setter);
+    void add_float(std::string_view name, std::function<float()>&& getter, std::function<void(float)>&& setter);
+    void add_double(std::string_view name, std::function<double()>&& getter, std::function<void(double)>&& setter);
 
 private:
     registry* m_registry;
@@ -127,14 +129,19 @@ public:
     template<displayable t_>
     void add_child(std::string_view name, t_& t);
 
+    void set_type(std::string_view value);
+    void set_units(std::string_view value);
+
     template<typename t_>
     void set(std::string_view name, const t_& value) requires math::numeric<t_> || std::is_same_v<t_, bool> || units::measure_type<t_>;
     void set(std::string_view name, std::string_view value);
 
     template<typename t_>
-    void add(std::string_view name, const t_& ref) requires math::numeric<t_> || std::is_same_v<t_, bool> || units::measure_type<t_>;
+    void add_readonly(std::string_view name, const t_& ref) requires math::numeric<t_> || std::is_same_v<t_, bool> || units::measure_type<t_>;
     template<typename t_>
-    void add_func(std::string_view name, std::function<t_()>&& getter) requires math::numeric<t_> || std::is_same_v<t_, bool> || units::measure_type<t_>;
+    void add(std::string_view name, t_& ref) requires math::numeric<t_> || std::is_same_v<t_, bool> || units::measure_type<t_>;
+    template<typename t_>
+    void add_func(std::string_view name, std::function<t_()>&& getter, std::function<void(t_)>&& setter) requires math::numeric<t_> || std::is_same_v<t_, bool> || units::measure_type<t_>;
 
 private:
     entry_ref m_entry;
@@ -166,6 +173,14 @@ void bind::add_child(const std::string_view name, t_& t) {
     m_entry.add_child(name, t);
 }
 
+inline void bind::set_type(const std::string_view value) {
+    set(".type", value);
+}
+
+inline void bind::set_units(const std::string_view value) {
+    set(".unit", value);
+}
+
 template<typename t_>
 void bind::set(const std::string_view name, const t_& value) requires math::numeric<t_> || std::is_same_v<t_, bool> || units::measure_type<t_> {
     if constexpr (std::is_same_v<t_, bool>) {
@@ -195,21 +210,21 @@ inline void bind::set(const std::string_view name, const std::string_view value)
 }
 
 template<typename t_>
-void bind::add(const std::string_view name, const t_& ref) requires math::numeric<t_> || std::is_same_v<t_, bool> || units::measure_type<t_> {
+void bind::add_readonly(std::string_view name, const t_& ref) requires math::numeric<t_> || std::is_same_v<t_, bool> || units::measure_type<t_> {
     if constexpr (std::is_same_v<t_, bool>) {
-        m_entry.add_bool(name, [&ref]()->auto { return ref; });
+        m_entry.add_bool(name, [&ref]()->auto { return ref; }, std::function<void(bool)>{});
     } else if constexpr (std::is_same_v<t_, int32_t>) {
-        m_entry.add_int32(name, [&ref]()->auto { return ref; });
+        m_entry.add_int32(name, [&ref]()->auto { return ref; }, std::function<void(int32_t)>{});
     } else if constexpr (std::is_same_v<t_, float>) {
-        m_entry.add_float(name, [&ref]()->auto { return ref; });
+        m_entry.add_float(name, [&ref]()->auto { return ref; }, std::function<void(float)>{});
     } else if constexpr (std::is_same_v<t_, double>) {
-        m_entry.add_double(name, [&ref]()->auto { return ref; });
+        m_entry.add_double(name, [&ref]()->auto { return ref; }, std::function<void(double)>{});
     } else if constexpr (units::measure_type<t_>) {
         using inner_type = t_::type;
         if constexpr (std::is_same_v<inner_type, float>) {
-            m_entry.add_float(name, [&ref]()->auto { return ref.value(); });
+            m_entry.add_float(name, [&ref]()->auto { return ref.value(); }, std::function<void(float)>{});
         } else if constexpr (std::is_same_v<inner_type, double>) {
-            m_entry.add_double(name, [&ref]()->auto { return ref.value(); });
+            m_entry.add_double(name, [&ref]()->auto { return ref.value(); }, std::function<void(double)>{});
         } else {
             static_assert(false, "unsupported dashboard type");
         }
@@ -219,21 +234,49 @@ void bind::add(const std::string_view name, const t_& ref) requires math::numeri
 }
 
 template<typename t_>
-void bind::add_func(const std::string_view name, std::function<t_()>&& getter) requires math::numeric<t_> || std::is_same_v<t_, bool> || units::measure_type<t_> {
+void bind::add(const std::string_view name, t_& ref) requires math::numeric<t_> || std::is_same_v<t_, bool> || units::measure_type<t_> {
     if constexpr (std::is_same_v<t_, bool>) {
-        m_entry.add_bool(name, std::move(getter));
+        m_entry.add_bool(name, [&ref]()->auto { return ref; }, [&ref](auto val)->void { ref = val; });
     } else if constexpr (std::is_same_v<t_, int32_t>) {
-        m_entry.add_int32(name, std::move(getter));
+        m_entry.add_int32(name, [&ref]()->auto { return ref; }, [&ref](auto val)->void { ref = val; });
     } else if constexpr (std::is_same_v<t_, float>) {
-        m_entry.add_float(name, std::move(getter));
+        m_entry.add_float(name, [&ref]()->auto { return ref; }, [&ref](auto val)->void { ref = val; });
     } else if constexpr (std::is_same_v<t_, double>) {
-        m_entry.add_double(name, std::move(getter));
+        m_entry.add_double(name, [&ref]()->auto { return ref; }, [&ref](auto val)->void { ref = val; });
     } else if constexpr (units::measure_type<t_>) {
         using inner_type = t_::type;
         if constexpr (std::is_same_v<inner_type, float>) {
-            m_entry.add_float(name, [getter]()->auto { return getter().value(); });
+            m_entry.add_float(name, [&ref]()->auto { return ref.value(); }, [&ref](auto val)->void { ref = val; });
         } else if constexpr (std::is_same_v<inner_type, double>) {
-            m_entry.add_double(name, [getter]()->auto { return getter().value(); });
+            m_entry.add_double(name, [&ref]()->auto { return ref.value(); }, [&ref](auto val)->void { ref = val; });
+        } else {
+            static_assert(false, "unsupported dashboard type");
+        }
+    } else {
+        static_assert(false, "unsupported dashboard type");
+    }
+}
+
+template<typename t_>
+void bind::add_func(const std::string_view name, std::function<t_()>&& getter, std::function<void(t_)>&& setter) requires math::numeric<t_> || std::is_same_v<t_, bool> || units::measure_type<t_> {
+    if constexpr (std::is_same_v<t_, bool>) {
+        m_entry.add_bool(name, std::move(getter), std::move(setter));
+    } else if constexpr (std::is_same_v<t_, int32_t>) {
+        m_entry.add_int32(name, std::move(getter), std::move(setter));
+    } else if constexpr (std::is_same_v<t_, float>) {
+        m_entry.add_float(name, std::move(getter), std::move(setter));
+    } else if constexpr (std::is_same_v<t_, double>) {
+        m_entry.add_double(name, std::move(getter), std::move(setter));
+    } else if constexpr (units::measure_type<t_>) {
+        using inner_type = t_::type;
+        if constexpr (std::is_same_v<inner_type, float>) {
+            m_entry.add_float(name,
+                getter ? [getter]()->auto { return getter().value(); } : std::function<float()>{},
+                setter ? [setter](float raw)->void { setter(t_(raw)); } : std::function<void(float)>{});
+        } else if constexpr (std::is_same_v<inner_type, double>) {
+            m_entry.add_double(name,
+                getter ? [getter]()->auto { return getter().value(); } : std::function<double()>{},
+                setter ? [setter](double raw)->void { setter(t_(raw)); } : std::function<void(double)>{});
         } else {
             static_assert(false, "unsupported dashboard type");
         }

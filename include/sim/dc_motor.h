@@ -2,6 +2,7 @@
 
 #include "math/plant/dc_motor.h"
 #include "units.h"
+#include "dashboard/object.h"
 
 namespace autobot::sim {
 
@@ -17,8 +18,12 @@ public:
 
     void update(units::seconds dt);
 
+    void bind_dashboard(dashboard::bind&& bind);
+
 private:
     math::dc_motor_plant m_plant;
+
+    dashboard::bind m_dashboard_bind;
 };
 
 

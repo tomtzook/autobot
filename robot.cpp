@@ -53,6 +53,7 @@ void init() {
     registry.add("pid", pid);
     registry.add("ff", ff);
     registry.add("profile", profile);
+    registry.add("sim", motor_sim);
 }
 
 void update() {

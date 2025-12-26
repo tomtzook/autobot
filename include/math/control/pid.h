@@ -223,8 +223,8 @@ template<units::unit_or_measure_type in_unit_, units::unit_or_measure_type out_u
 void pid_controller<in_unit_, out_unit_>::bind_dashboard(dashboard::bind&& bind) {
     m_dashboard_bind = std::move(bind);
 
-    m_dashboard_bind.set(".type", "pid_controller");
-    m_dashboard_bind.set(".unit", units::name<error_unit>());
+    m_dashboard_bind.set_type("pid_controller");
+    m_dashboard_bind.set_units(units::name<error_unit>());
 
     m_dashboard_bind.add("kp", m_kp);
     m_dashboard_bind.add("ki", m_ki);
@@ -232,9 +232,9 @@ void pid_controller<in_unit_, out_unit_>::bind_dashboard(dashboard::bind&& bind)
     m_dashboard_bind.add("izone", m_izone);
     m_dashboard_bind.add("min_out", m_min_out);
     m_dashboard_bind.add("max_out", m_max_out);
-    m_dashboard_bind.add("error", m_last_error);
-    m_dashboard_bind.add("velocity_error", m_last_velocity_error);
-    m_dashboard_bind.add("total_error", m_total_error);
+    m_dashboard_bind.add_readonly("error", m_last_error);
+    m_dashboard_bind.add_readonly("velocity_error", m_last_velocity_error);
+    m_dashboard_bind.add_readonly("total_error", m_total_error);
 }
 
 }

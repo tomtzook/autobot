@@ -88,8 +88,8 @@ template<units::unit_of_category_type<units::category::length, units::category::
 void trapezoid_profile<unit_>::bind_dashboard(dashboard::bind&& bind) {
     m_dashboard_bind = std::move(bind);
 
-    m_dashboard_bind.set(".type", "trapezoid_profile");
-    m_dashboard_bind.set(".unit", units::name<unit>());
+    m_dashboard_bind.set_type("trapezoid_profile");
+    m_dashboard_bind.set_units(units::name<unit>());
 
     m_dashboard_bind.add("max_velocity", m_max_vel);
     m_dashboard_bind.add("max_acceleration", m_max_accel);
@@ -98,9 +98,9 @@ void trapezoid_profile<unit_>::bind_dashboard(dashboard::bind&& bind) {
     std::function<velocity_type()> get_vel = [this]()->velocity_type { return m_last_output.velocity; };
     std::function<bool()> get_finished = [this]()->bool { return m_last_output.finished; };
 
-    m_dashboard_bind.add_func("next_position", std::move(get_pos));
-    m_dashboard_bind.add_func("next_velocity", std::move(get_vel));
-    m_dashboard_bind.add_func("finished", std::move(get_finished));
+    m_dashboard_bind.add_func("next_position", std::move(get_pos), {});
+    m_dashboard_bind.add_func("next_velocity", std::move(get_vel), {});
+    m_dashboard_bind.add_func("finished", std::move(get_finished), {});
 }
 
 }

@@ -104,8 +104,8 @@ template<units::unit_of_category_type<units::category::length, units::category::
 void static_feed_forward<unit_>::bind_dashboard(dashboard::bind&& bind) {
     m_dashboard_bind = std::move(bind);
 
-    m_dashboard_bind.set(".type", "simple_feed_forward");
-    m_dashboard_bind.set(".unit", units::name<unit>());
+    m_dashboard_bind.set_type("simple_feed_forward");
+    m_dashboard_bind.set_units(units::name<unit>());
 
     m_dashboard_bind.add("ks", m_ks);
     m_dashboard_bind.add("output", m_last_output);
@@ -168,12 +168,12 @@ template<units::unit_of_category_type<units::category::length, units::category::
 void motor_feed_forward<unit_>::bind_dashboard(dashboard::bind&& bind) {
     m_dashboard_bind = std::move(bind);
 
-    m_dashboard_bind.set(".type", "motor_feed_forward");
-    m_dashboard_bind.set(".unit", units::name<unit>());
+    m_dashboard_bind.set_type("motor_feed_forward");
+    m_dashboard_bind.set_units(units::name<unit>());
 
     m_dashboard_bind.add("kv", m_kv);
     m_dashboard_bind.add("ka", m_ka);
-    m_dashboard_bind.add("output", m_last_output);
+    m_dashboard_bind.add_readonly("output", m_last_output);
 }
 
 }
