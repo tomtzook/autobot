@@ -271,6 +271,12 @@ constexpr auto from(const std::chrono::duration<chrono_rep_, chrono_per_>& src) 
     return measure<unit<math::floating_type, category::time, detail::converter<chrono_per_>>>(src.count());
 }
 
+template<unit_type t_>
+constexpr auto name() noexcept {
+    const auto* name = detail::unit_name<t_>::name();
+    return std::string_view(name, std::strlen(name));
+}
+
 template<detail::unit_type unit_>
 struct measure : detail::measure_base_ {
     using unit = unit_;
@@ -330,9 +336,9 @@ struct measure : detail::measure_base_ {
     { return measure<compound_unit<unit, unit_inverse<other_unit_>>>{m_value / rhs.value()}; }
 
     template<math::numeric raw_t_>
-    constexpr measure operator*(const raw_t_ rhs) const noexcept { return measure{m_value * rhs}; }
+    constexpr measure operator*(const raw_t_ rhs) const noexcept { return measure{m_value * static_cast<type>(rhs)}; }
     template<math::numeric raw_t_>
-    constexpr measure operator/(const raw_t_& rhs) const noexcept { return measure{m_value / rhs}; }
+    constexpr measure operator/(const raw_t_& rhs) const noexcept { return measure{m_value / static_cast<type>(rhs)}; }
 
     template<detail::unit_type other_unit_>
     constexpr measure& operator+=(const measure<other_unit_>& rhs) noexcept requires(ops::is_convertible_v<unit, other_unit_>)

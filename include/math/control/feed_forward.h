@@ -1,8 +1,8 @@
 #pragma once
 
-#include "math/common.h"
 #include "units.h"
 #include "math/ops.h"
+#include "dashboard/object.h"
 
 namespace autobot::math {
 
@@ -25,8 +25,12 @@ public:
 
     units::volts calculate(const velocity_type& current);
 
+    void bind_dashboard(dashboard::bind&& bind);
+
 private:
     static_gain m_ks;
+    units::volts m_last_output;
+    dashboard::bind m_dashboard_bind;
 };
 
 template<units::unit_of_category_type<units::category::length, units::category::angle> unit_>
@@ -57,19 +61,25 @@ public:
 
     units::volts calculate(const velocity_type& current, const velocity_type& wanted, units::seconds dt);
 
+    void bind_dashboard(dashboard::bind&& bind);
+
 private:
     velocity_gain m_kv;
     acceleration_gain m_ka;
+    units::volts m_last_output;
+    dashboard::bind m_dashboard_bind;
 };
 
 template<units::unit_of_category_type<units::category::length, units::category::angle> unit_>
 static_feed_forward<unit_>::static_feed_forward()
     : m_ks(0)
+    , m_last_output(0)
 {}
 
 template<units::unit_of_category_type<units::category::length, units::category::angle> unit_>
 static_feed_forward<unit_>::static_feed_forward(const static_gain& ks)
     : m_ks(ks)
+    , m_last_output(0)
 {}
 
 template<units::unit_of_category_type<units::category::length, units::category::angle> unit_>
@@ -84,25 +94,42 @@ void static_feed_forward<unit_>::ks(const static_gain& ks) {
 
 template<units::unit_of_category_type<units::category::length, units::category::angle> unit_>
 units::volts static_feed_forward<unit_>::calculate(const velocity_type& current) {
-    return m_ks * signum(current);
+    const auto out = m_ks * signum(current);
+
+    m_last_output = out;
+    return out;
+}
+
+template<units::unit_of_category_type<units::category::length, units::category::angle> unit_>
+void static_feed_forward<unit_>::bind_dashboard(dashboard::bind&& bind) {
+    m_dashboard_bind = std::move(bind);
+
+    m_dashboard_bind.set(".type", "simple_feed_forward");
+    m_dashboard_bind.set(".unit", units::name<unit>());
+
+    m_dashboard_bind.add("ks", m_ks);
+    m_dashboard_bind.add("output", m_last_output);
 }
 
 template<units::unit_of_category_type<units::category::length, units::category::angle> unit_>
 motor_feed_forward<unit_>::motor_feed_forward()
     : m_kv(0)
     , m_ka(0)
+    , m_last_output(0)
 {}
 
 template<units::unit_of_category_type<units::category::length, units::category::angle> unit_>
 motor_feed_forward<unit_>::motor_feed_forward(const velocity_gain& kv, const acceleration_gain& ka)
     : m_kv(kv)
     , m_ka(ka)
+    , m_last_output(0)
 {}
 
 template<units::unit_of_category_type<units::category::length, units::category::angle> unit_>
 motor_feed_forward<unit_>::motor_feed_forward(const dc_motor& motor, units::jkg_meters_squared moment_of_inertia, raw_type gearing)
     : m_kv(motor.kv(gearing))
     , m_ka(motor.ka(gearing, moment_of_inertia))
+    , m_last_output(0)
 {}
 
 template<units::unit_of_category_type<units::category::length, units::category::angle> unit_>
@@ -131,7 +158,22 @@ units::volts motor_feed_forward<unit_>::calculate(const velocity_type& current, 
     const auto B = one / m_ka;
     const auto A_d = exp(A * dt);
     const auto B_d = A > neg_min_time ? B * dt : one / A * (A_d - one) * B;
-    return one / B_d * (wanted - A_d * current);
+    const auto out =  one / B_d * (wanted - A_d * current);
+
+    m_last_output = out;
+    return out;
+}
+
+template<units::unit_of_category_type<units::category::length, units::category::angle> unit_>
+void motor_feed_forward<unit_>::bind_dashboard(dashboard::bind&& bind) {
+    m_dashboard_bind = std::move(bind);
+
+    m_dashboard_bind.set(".type", "motor_feed_forward");
+    m_dashboard_bind.set(".unit", units::name<unit>());
+
+    m_dashboard_bind.add("kv", m_kv);
+    m_dashboard_bind.add("ka", m_ka);
+    m_dashboard_bind.add("output", m_last_output);
 }
 
 }

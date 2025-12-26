@@ -1,0 +1,6 @@
+[submodule "autoboard/libs/imgui"]
+	path = autoboard/libs/imgui
+	url = git@github.com:ocornut/imgui.git
+[submodule "autoboard/libs/implot"]
+	path = autoboard/libs/implot
+	url = git@github.com:epezent/implot.git

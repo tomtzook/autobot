@@ -1,6 +1,7 @@
 #pragma once
 
 #include "units.h"
+#include "dashboard/object.h"
 
 namespace autobot::math {
 
@@ -24,9 +25,14 @@ public:
 
     state calculate(const type& target_position, units::seconds current_time);
 
+    void bind_dashboard(dashboard::bind&& bind);
+
 private:
     velocity_type m_max_vel;
     acceleration_type m_max_accel;
+    state m_last_output;
+
+    dashboard::bind m_dashboard_bind;
 };
 
 template<units::unit_of_category_type<units::category::length, units::category::angle> unit_>
@@ -41,41 +47,60 @@ trapezoid_profile<unit_>::state trapezoid_profile<unit_>::calculate(const type& 
     const auto distance_passed_in_cruise = target_position - 2 * distance_passed_in_accel;
     const auto cruise_time = distance_passed_in_cruise / m_max_vel;
 
+    state out;
     if (current_time <= acceleration_time) {
         // acceleration phase
         const auto time_in_phase = current_time;
-        return {
+        out = {
             m_max_accel * time_in_phase * time_in_phase * 0.5,
             m_max_accel * time_in_phase,
             false
         };
-    }
-
-    if (current_time <= (acceleration_time + cruise_time)) {
+    } else if (current_time <= (acceleration_time + cruise_time)) {
         // cruising phase
         const auto time_in_phase = current_time - acceleration_time;
-        return {
+        out = {
             distance_passed_in_accel + m_max_vel * time_in_phase,
             m_max_vel,
             false
         };
-    }
-
-    if (current_time <= (acceleration_time + acceleration_time + cruise_time)) {
+    } else if (current_time <= (acceleration_time + acceleration_time + cruise_time)) {
         // deceleration phase
         const auto time_in_phase = current_time - acceleration_time - cruise_time;
-        return {
+        out = {
             (distance_passed_in_accel + distance_passed_in_cruise) + (m_max_vel * time_in_phase) - (m_max_accel * time_in_phase * time_in_phase * 0.5),
             m_max_vel - m_max_accel * time_in_phase,
             false
         };
+    } else {
+        out = {
+            target_position,
+            velocity_type(0),
+            true
+        };
     }
 
-    return {
-        target_position,
-        velocity_type(0),
-        true
-    };
+    m_last_output = out;
+    return out;
+}
+
+template<units::unit_of_category_type<units::category::length, units::category::angle> unit_>
+void trapezoid_profile<unit_>::bind_dashboard(dashboard::bind&& bind) {
+    m_dashboard_bind = std::move(bind);
+
+    m_dashboard_bind.set(".type", "trapezoid_profile");
+    m_dashboard_bind.set(".unit", units::name<unit>());
+
+    m_dashboard_bind.add("max_velocity", m_max_vel);
+    m_dashboard_bind.add("max_acceleration", m_max_accel);
+
+    std::function<type()> get_pos = [this]()->type { return m_last_output.position; };
+    std::function<velocity_type()> get_vel = [this]()->velocity_type { return m_last_output.velocity; };
+    std::function<bool()> get_finished = [this]()->bool { return m_last_output.finished; };
+
+    m_dashboard_bind.add_func("next_position", std::move(get_pos));
+    m_dashboard_bind.add_func("next_velocity", std::move(get_vel));
+    m_dashboard_bind.add_func("finished", std::move(get_finished));
 }
 
 }

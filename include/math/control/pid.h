@@ -3,6 +3,7 @@
 #include "math/common.h"
 #include "units.h"
 #include "math/ops.h"
+#include "dashboard/object.h"
 
 namespace autobot::math {
 
@@ -56,6 +57,8 @@ public:
     [[nodiscard]] out_type calculate(const error_type& process_variable, const error_type& set_point, units::seconds dt);
     [[nodiscard]] bool at_setpoint(error_type position_tolerance, error_velocity_type velocity_tolerance) const;
 
+    void bind_dashboard(dashboard::bind&& bind);
+
 private:
     p_gain_type m_kp;
     i_gain_type m_ki;
@@ -68,6 +71,8 @@ private:
     error_type m_last_error;
     error_velocity_type m_last_velocity_error;
     error_type m_total_error;
+
+    dashboard::bind m_dashboard_bind;
 };
 
 template<units::unit_or_measure_type in_unit_, units::unit_or_measure_type out_unit_>
@@ -192,7 +197,7 @@ pid_controller<in_unit_, out_unit_>::out_type pid_controller<in_unit_, out_unit_
     const auto i = m_ki * m_total_error;
     const auto d = m_kd * velocity_error;
 
-    if (m_izone != izone_0 && abs(m_total_error) < m_izone) {
+    if (m_izone == izone_0 || abs(m_total_error) >= m_izone) {
         m_total_error = 0;
     } else {
         m_total_error += error;
@@ -207,7 +212,29 @@ pid_controller<in_unit_, out_unit_>::out_type pid_controller<in_unit_, out_unit_
 
 template<units::unit_or_measure_type in_unit_, units::unit_or_measure_type out_unit_>
 bool pid_controller<in_unit_, out_unit_>::at_setpoint(const error_type position_tolerance, const error_velocity_type velocity_tolerance) const {
+    if (m_is_first_run) {
+        return false;
+    }
+
     return abs(m_last_error) <= position_tolerance && abs(m_last_velocity_error) <= velocity_tolerance;
+}
+
+template<units::unit_or_measure_type in_unit_, units::unit_or_measure_type out_unit_>
+void pid_controller<in_unit_, out_unit_>::bind_dashboard(dashboard::bind&& bind) {
+    m_dashboard_bind = std::move(bind);
+
+    m_dashboard_bind.set(".type", "pid_controller");
+    m_dashboard_bind.set(".unit", units::name<error_unit>());
+
+    m_dashboard_bind.add("kp", m_kp);
+    m_dashboard_bind.add("ki", m_ki);
+    m_dashboard_bind.add("kd", m_kd);
+    m_dashboard_bind.add("izone", m_izone);
+    m_dashboard_bind.add("min_out", m_min_out);
+    m_dashboard_bind.add("max_out", m_max_out);
+    m_dashboard_bind.add("error", m_last_error);
+    m_dashboard_bind.add("velocity_error", m_last_velocity_error);
+    m_dashboard_bind.add("total_error", m_total_error);
 }
 
 }

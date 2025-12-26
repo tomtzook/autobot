@@ -7,6 +7,10 @@ set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 20)
 
 find_package(Eigen3 3.3 REQUIRED NO_MODULE)
+find_package(Threads REQUIRED)
+find_package(fmt REQUIRED)
+find_package(looper REQUIRED HINTS /home/tomtzook/.local)
+find_package(obsr REQUIRED HINTS /home/tomtzook/.local)
 
 include(GNUInstallDirs)
 
@@ -16,16 +20,17 @@ set(SOURCES
         include/math/common.h
         include/math/plant/plant.h
         include/math/plant/dc_motor.h
+        include/units.h
+        include/math/ops.h
         include/math/control/pid.h
         include/math/control/trapezoid_profile.h
-        include/math/ops.h
         include/math/control/feed_forward.h
-        include/math/control/triangle_profile.h
         include/sim/dc_motor.h
-        include/units.h
+        include/dashboard/object.h
 
         src/math/plant/dc_motor.cpp
         src/sim/dc_motor.cpp
+        src/dashboard/object.cpp
 )
 
 add_library(autobot STATIC ${SOURCES})
@@ -35,7 +40,7 @@ target_include_directories(autobot
         $<INSTALL_INTERFACE:include/autobot>
         PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/src)
-target_link_libraries(autobot Eigen3::Eigen)
+target_link_libraries(autobot Eigen3::Eigen Threads::Threads fmt::fmt looper::looper obsr::obsr)
 
 install(TARGETS autobot EXPORT autobot
         LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"
@@ -48,5 +53,7 @@ install(EXPORT autobot
         NAMESPACE autobot::
         DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/autobot")
 
-add_executable(test test.cpp)
-target_link_libraries(test autobot)
+add_subdirectory(autoboard)
+
+add_executable(test_robot robot.cpp)
+target_link_libraries(test_robot autobot)
