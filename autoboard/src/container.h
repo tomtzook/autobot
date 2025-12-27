@@ -2,8 +2,9 @@
 
 #include <vector>
 
-#include "obsr/window.h"
+#include "widgets/obsr.h"
 #include "plots/plots.h"
+#include "widgets/canvas.h"
 
 namespace ui {
 
@@ -15,10 +16,13 @@ public:
     void draw();
 
 private:
-    void create_plot_window();
+    void create_base();
 
-    obsr_window m_obsr_window;
+    data::obsr_storage m_obsr_storage;
+    widgets::obsr_tree m_obsr_tree;
+
     std::vector<plots::plot_window> m_plot_windows;
+    std::vector<widgets::canvas_window> m_canvas_windows;
 };
 
 }

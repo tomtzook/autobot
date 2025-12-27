@@ -11,10 +11,12 @@ set(SOURCES
         include/math/control/feed_forward.h
         include/sim/dc_motor.h
         include/dashboard/object.h
+        include/dashboard/toggle.h
 
         src/math/plant/dc_motor.cpp
         src/sim/dc_motor.cpp
         src/dashboard/object.cpp
+        src/dashboard/toggle.cpp
 )
 
 add_library(autobot STATIC ${SOURCES})

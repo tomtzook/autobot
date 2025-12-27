@@ -1,9 +1,27 @@
 
 #include <imgui.h>
 
-#include "window.h"
+#include "obsr.h"
 
-namespace ui {
+namespace ui::widgets {
+
+static const char* get_type_name(const obsr::value_type type) {
+    switch (type) {
+        case obsr::value_type::empty: return "empty";
+        case obsr::value_type::raw: return "raw";
+        case obsr::value_type::string: return "string";
+        case obsr::value_type::boolean: return "boolean";
+        case obsr::value_type::integer32: return "int32";
+        case obsr::value_type::integer64: return "int64";
+        case obsr::value_type::floating_point32: return "float";
+        case obsr::value_type::floating_point64: return "double";
+        case obsr::value_type::integer32_array: return "int32 array";
+        case obsr::value_type::integer64_array: return "int64 array";
+        case obsr::value_type::floating_point32_array: return "float array";
+        case obsr::value_type::floating_point64_array: return "double array";
+        default: return "unknown";
+    }
+}
 
 static bool inputs32(int32_t* value) {
     return ImGui::InputScalar("",
@@ -58,24 +76,6 @@ static void draw_arr_readonly(std::span<const t_> arr, const char* pattern) {
     }
 
     ImGui::Text("]");
-}
-
-static const char* type_name(const obsr::value_type type) {
-    switch (type) {
-        case obsr::value_type::empty: return "empty";
-        case obsr::value_type::raw: return "raw";
-        case obsr::value_type::string: return "string";
-        case obsr::value_type::boolean: return "boolean";
-        case obsr::value_type::integer32: return "int32";
-        case obsr::value_type::integer64: return "int64";
-        case obsr::value_type::floating_point32: return "float";
-        case obsr::value_type::floating_point64: return "double";
-        case obsr::value_type::integer32_array: return "int32 array";
-        case obsr::value_type::integer64_array: return "int64 array";
-        case obsr::value_type::floating_point32_array: return "float array";
-        case obsr::value_type::floating_point64_array: return "double array";
-        default: return "unknown";
-    }
 }
 
 static void draw_value_string(const obsr::entry entry, const obsr::value& value) {
@@ -150,28 +150,105 @@ static void draw_value_double(const obsr::entry entry, const obsr::value& value)
     }
 }
 
-static void draw_value(const obsr::entry entry, const obsr::value& value) {
+obsr_tree::obsr_tree(data::obsr_storage& storage)
+    : m_storage(storage)
+{}
+
+void obsr_tree::draw() const {
+    auto [lock, root] = m_storage.use();
+    draw_tree(root);
+}
+
+void obsr_tree::draw_tree(const data::obsr_object* root) {
+    if (ImGui::BeginTable("obsr_table", 3, ImGuiTableFlags_Borders)) {
+        ImGui::TableSetupColumn("name", ImGuiTableColumnFlags_None);
+        ImGui::TableSetupColumn("type", ImGuiTableColumnFlags_IndentDisable);
+        ImGui::TableSetupColumn("value", ImGuiTableColumnFlags_None);
+        ImGui::TableHeadersRow();
+
+        ImGui::PushID("obsr");
+        {
+            ImGui::TableNextRow();
+            ImGui::TableSetColumnIndex(0);
+            draw_content(root);
+        }
+        ImGui::PopID();
+
+        ImGui::EndTable();
+    }
+}
+
+void obsr_tree::draw(const data::obsr_object* object) {
+    const auto name = obsr::get_name_for_object(object->get_handle());
+
+    ImGui::PushID(name.data());
+    {
+        if (ImGui::TreeNode(name.data())) {
+            set_drag_drop(object);
+
+            draw_content(object);
+            ImGui::TreePop();
+        } else {
+            set_drag_drop(object);
+        }
+    }
+    ImGui::PopID();
+}
+
+void obsr_tree::draw_content(const data::obsr_object* object) {
+    object->foreach_child([](const auto& child)->void {
+        ImGui::TableNextRow();
+        ImGui::TableSetColumnIndex(0);
+
+        draw(child);
+    });
+    object->foreach_entry([](const auto& entry)->void {
+        ImGui::TableNextRow();
+        ImGui::TableSetColumnIndex(0);
+
+        draw(entry);
+    });
+}
+
+void obsr_tree::draw(const data::obsr_entry* entry) {
+    const auto name = obsr::get_name_for_entry(entry->get_handle());
+
+    ImGui::PushID(name.data());
+    {
+        ImGui::TableSetColumnIndex(0);
+        ImGui::Selectable(name.data());
+        set_drag_drop(entry);
+
+        const auto& value = entry->get_value();
+        ImGui::TableSetColumnIndex(1);
+        ImGui::Text("%s", get_type_name(value.get_type()));
+
+        ImGui::TableSetColumnIndex(2);
+        draw(entry->get_handle(), value);
+    }
+    ImGui::PopID();
+}
+
+void obsr_tree::draw(const obsr::entry handle, const obsr::value& value) {
     ImGui::PushID("value");
     switch (value.get_type()) {
-        case obsr::value_type::raw:
-            break;
         case obsr::value_type::string:
-            draw_value_string(entry, value);
+            draw_value_string(handle, value);
             break;
         case obsr::value_type::boolean:
-            draw_value_boolean(entry, value);
+            draw_value_boolean(handle, value);
             break;
         case obsr::value_type::integer32:
-            draw_value_int32(entry, value);
+            draw_value_int32(handle, value);
             break;
         case obsr::value_type::integer64:
-            draw_value_int64(entry, value);
+            draw_value_int64(handle, value);
             break;
         case obsr::value_type::floating_point32:
-            draw_value_float(entry, value);
+            draw_value_float(handle, value);
             break;
         case obsr::value_type::floating_point64:
-            draw_value_double(entry, value);
+            draw_value_double(handle, value);
             break;
         case obsr::value_type::integer32_array:
             draw_arr_readonly(value.get_int32_array(), "%d");
@@ -185,6 +262,7 @@ static void draw_value(const obsr::entry entry, const obsr::value& value) {
         case obsr::value_type::floating_point64_array:
             draw_arr_readonly(value.get_double_array(), "%.3f");
             break;
+        case obsr::value_type::raw:
         case obsr::value_type::empty:
         default:
             break;
@@ -193,84 +271,22 @@ static void draw_value(const obsr::entry entry, const obsr::value& value) {
     ImGui::PopID();
 }
 
-static void draw_leaf_node(const obsr_node& node) {
-    ImGui::PushID(node.name().data());
-    {
-        ImGui::TableSetColumnIndex(0);
-        ImGui::Selectable(node.name().data());
-        if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_None)) {
-            const auto handle = node.handle();
-            ImGui::SetDragDropPayload("OBSR_ENTRY", &handle, sizeof(handle));
-            ImGui::Text("%s", node.name().data());
-            ImGui::EndDragDropSource();
-        }
-
-        if (const auto* value = node.value(); value != nullptr) {
-            ImGui::TableSetColumnIndex(1);
-            ImGui::Text("%s", type_name(value->get_type()));
-
-            ImGui::TableSetColumnIndex(2);
-            draw_value(node.handle(), *value);
-        }
-    }
-    ImGui::PopID();
-}
-
-static void draw_node(const obsr_node& node) {
-    ImGui::PushID(node.name().data());
-    {
-        if (ImGui::TreeNode(node.name().data())) {
-            node.foreach_child([](const auto& child)->void {
-                ImGui::TableNextRow();
-                ImGui::TableSetColumnIndex(0);
-
-                if (child.is_entry()) {
-                    draw_leaf_node(child);
-                } else {
-                    draw_node(child);
-                }
-            });
-
-            ImGui::TreePop();
-        }
-    }
-    ImGui::PopID();
-}
-
-static void draw_tree(const obsr_node& root_node) {
-    if (ImGui::BeginTable("obsr_table", 3, ImGuiTableFlags_Borders)) {
-        ImGui::TableSetupColumn("name", ImGuiTableColumnFlags_None);
-        ImGui::TableSetupColumn("type", ImGuiTableColumnFlags_None);
-        ImGui::TableSetupColumn("value", ImGuiTableColumnFlags_None);
-        ImGui::TableHeadersRow();
-
-        ImGui::PushID("obsr");
-        {
-            ImGui::TableNextRow();
-            ImGui::TableSetColumnIndex(0);
-            draw_node(root_node);
-        }
-        ImGui::PopID();
-
-        ImGui::EndTable();
+void obsr_tree::set_drag_drop(const data::obsr_object* object) {
+    if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_None)) {
+        const auto handle = object->get_id();
+        ImGui::SetDragDropPayload("DATA_SOURCE", &handle, sizeof(handle));
+        ImGui::Text("%s", object->get_name().data());
+        ImGui::EndDragDropSource();
     }
 }
 
-obsr_window::obsr_window()
-    : m_storage()
-{}
-
-void obsr_window::update() {
-    m_storage.update();
-}
-
-void obsr_window::draw() {
-    ImGui::Begin("obsr");
-    {
-        auto [lock, root] = m_storage.use();
-        draw_tree(root);
+void obsr_tree::set_drag_drop(const data::obsr_entry* entry) {
+    if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_None)) {
+        const auto handle = entry->get_id();
+        ImGui::SetDragDropPayload("DATA_SOURCE", &handle, sizeof(handle));
+        ImGui::Text("%s", entry->get_name().data());
+        ImGui::EndDragDropSource();
     }
-    ImGui::End();
 }
 
 }

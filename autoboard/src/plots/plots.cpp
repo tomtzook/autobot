@@ -1,26 +1,10 @@
 
-#include "plots.h"
-
 #include <format>
 
+#include "data/registry.h"
 #include "plots.h"
 
 namespace ui::plots {
-
-static float get_value(const obsr::handle handle) {
-    switch (const auto value = obsr::get_value(handle); value.get_type()) {
-        case obsr::value_type::boolean: return value.get_boolean();
-        case obsr::value_type::integer32: return static_cast<float>(value.get_int32());
-        case obsr::value_type::integer64: return static_cast<float>(value.get_int64());
-        case obsr::value_type::floating_point32: return value.get_float();
-        case obsr::value_type::floating_point64: return static_cast<float>(value.get_double());
-        default: return 0.0f;
-    }
-}
-
-static std::string get_item_name(const obsr::handle handle) {
-    return obsr::get_path_for_entry(handle);
-}
 
 time_plot::time_plot(const std::string_view label)
     : m_plot(label)
@@ -34,6 +18,11 @@ time_plot::time_plot(const std::string_view label)
 
 const char* time_plot::name() const {
     return m_plot.name();
+}
+
+void time_plot::attach_data(data::data_source&& source) {
+    const auto id = m_plot.create_plot(source.get_name(), 3.0f);
+    m_sources.emplace_back(id, std::move(source));
 }
 
 void time_plot::update() {
@@ -50,8 +39,12 @@ void time_plot::update() {
         const auto seconds = static_cast<float>(timestamp.count()) / 1000.0f;
 
         for (auto& source : m_sources) {
-            const auto value = get_value(source.m_handle);
-            m_plot.add_data(source.plot_id, seconds, value);
+            if (source.data_source.get_scheme() != data::scheme::number) {
+                continue;
+            }
+
+            const auto data = source.data_source.read<data::number_scheme>();
+            m_plot.add_data(source.plot_id, seconds, data.value);
         }
 
         m_plot.update(seconds);
@@ -60,16 +53,6 @@ void time_plot::update() {
 
 void time_plot::draw() {
     m_plot.draw();
-
-    if (ImGui::BeginDragDropTarget()) {
-        if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("OBSR_ENTRY")) {
-            obsr::handle item_handle = *static_cast<obsr::handle*>(payload->Data);
-            const auto name = get_item_name(item_handle);
-            const auto id = m_plot.create_plot(name, 1.0f);
-            m_sources.emplace_back(id, item_handle);
-        }
-        ImGui::EndDragDropTarget();
-    }
 }
 
 plot_window::plot_window(const std::string_view label)
@@ -98,6 +81,19 @@ void plot_window::draw() {
             it = m_plots.erase(it);
         } else {
             it->draw();
+
+            if (ImGui::BeginDragDropTarget()) {
+                if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("DATA_SOURCE")) {
+                    const auto item_id = *static_cast<uint64_t*>(payload->Data);
+                    const auto& registry = data::get_registry();
+                    if (auto opt = registry.get(item_id)) {
+                        auto& data = opt.value();
+                        it->attach_data(std::move(data));
+                    }
+                }
+                ImGui::EndDragDropTarget();
+            }
+
             ++it;
         }
 

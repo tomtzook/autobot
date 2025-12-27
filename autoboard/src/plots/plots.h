@@ -1,8 +1,8 @@
 #pragma once
 
 #include <chrono>
-#include <obsr.h>
 
+#include "data/source.h"
 #include "plots/xy_plot.h"
 
 namespace ui::plots {
@@ -13,6 +13,7 @@ public:
 
     [[nodiscard]] const char* name() const;
 
+    void attach_data(data::data_source&& source);
     void update();
     void draw();
 
@@ -20,7 +21,7 @@ private:
     static constexpr auto update_period = std::chrono::milliseconds(100);
     struct source_node {
         int plot_id;
-        obsr::handle m_handle;
+        data::data_source data_source;
     };
 
     xy_plot m_plot;

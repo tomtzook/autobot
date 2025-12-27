@@ -30,9 +30,19 @@ add_executable(autoboard src/main.cpp
         src/plots/plots.cpp
         src/container.h
         src/container.cpp
-        src/obsr/storage.h
-        src/obsr/storage.cpp
-        src/obsr/window.h
-        src/obsr/window.cpp)
+        src/widgets/widgets.h
+        src/widgets/canvas.h
+        src/data/source.h
+        src/data/source.cpp
+        src/data/scheme.h
+        src/data/registry.h
+        src/data/registry.cpp
+        src/data/obsr.h
+        src/data/obsr.cpp
+        src/data/obsr_storage.h
+        src/data/obsr_storage.cpp
+        src/widgets/obsr.h
+        src/widgets/obsr.cpp
+        src/widgets/canvas.cpp)
 target_include_directories(autoboard PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 target_link_libraries(autoboard imgui implot Threads::Threads fmt::fmt looper::looper obsr::obsr Eigen3::Eigen OpenGL::GL glfw)

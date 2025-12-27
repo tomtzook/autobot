@@ -198,8 +198,18 @@ constexpr measure<dst_unit_> convert(const measure<src_unit_>& src) noexcept req
 
         auto converted = static_cast<type>(src.value()) * static_cast<type>(ratio::num) / static_cast<type>(ratio::den);
         if constexpr (pi_ratio::num != 0) {
-            const auto pi = std::pow(math::pi, static_cast<type>(pi_ratio::num) / static_cast<type>(pi_ratio::den));
-            converted *= pi;
+            constexpr auto exponent = static_cast<type>(pi_ratio::num) / static_cast<type>(pi_ratio::den);
+            if constexpr (exponent == 1) {
+                converted *= math::pi;
+            } else if constexpr (exponent == 2) {
+                converted *= math::pi * math::pi;
+            } else if constexpr (exponent == -1) {
+                converted /= math::pi;
+            } else if constexpr (exponent == -2) {
+                converted /= (math::pi * math::pi);
+            } else {
+                converted *= std::pow(math::pi, exponent);
+            }
         }
 
         return measure<dst_unit_>(converted);
