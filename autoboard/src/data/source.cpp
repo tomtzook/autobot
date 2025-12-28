@@ -1,6 +1,4 @@
 
-#include <map>
-
 #include "scheme.h"
 #include "source.h"
 
@@ -26,8 +24,14 @@ std::string_view data_source::get_name() const {
     }, m_data);
 }
 
-scheme data_source::get_scheme() const {
-    return std::visit([](const auto& t)->scheme {
+bool data_source::has_new_data() const {
+    return std::visit([](const auto& t)->bool {
+        return t->has_new_data();
+    }, m_data);
+}
+
+scheme::type data_source::get_scheme() const {
+    return std::visit([](const auto& t)->auto {
         return t->get_scheme();
     }, m_data);
 }

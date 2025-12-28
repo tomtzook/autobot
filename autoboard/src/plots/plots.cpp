@@ -39,11 +39,11 @@ void time_plot::update() {
         const auto seconds = static_cast<float>(timestamp.count()) / 1000.0f;
 
         for (auto& source : m_sources) {
-            if (source.data_source.get_scheme() != data::scheme::number) {
+            if (source.data_source.get_scheme() != data::scheme::type::number) {
                 continue;
             }
 
-            const auto data = source.data_source.read<data::number_scheme>();
+            const auto data = source.data_source.read<data::scheme::number>();
             m_plot.add_data(source.plot_id, seconds, data.value);
         }
 

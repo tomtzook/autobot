@@ -17,6 +17,8 @@ set(SOURCES
         src/sim/dc_motor.cpp
         src/dashboard/object.cpp
         src/dashboard/toggle.cpp
+        include/dashboard/canvas.h
+        src/dashboard/canvas.cpp
 )
 
 add_library(autobot STATIC ${SOURCES})

@@ -17,7 +17,8 @@ public:
 
     [[nodiscard]] uint64_t get_id() const;
     [[nodiscard]] std::string_view get_name() const;
-    [[nodiscard]] scheme get_scheme() const;
+    [[nodiscard]] bool has_new_data() const;
+    [[nodiscard]] scheme::type get_scheme() const;
 
     template<typename t_>
     t_ read();

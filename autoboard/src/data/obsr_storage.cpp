@@ -35,7 +35,9 @@ void obsr_storage::handle_event(const obsr::event& event) {
 
     switch (event.get_type()) {
         case obsr::event_type::created: {
-            iterate_path(event.get_path());
+            iterate_path(event.get_path(), [](obsr_object* obj)->void {
+                obj->update();
+            });
             break;
         }
         case obsr::event_type::deleted: {
@@ -100,7 +102,7 @@ obsr_object* obsr_storage::create_child(obsr_object* parent, obsr::object handle
     const auto data = std::make_shared<obsr_object>(handle);
 
     auto& registry = get_registry();
-    registry.create(data);
+    registry.create(data, parent->get_id());
 
     parent->add_child(obsr::get_name_for_object(handle), data.get());
 
@@ -120,7 +122,7 @@ obsr_entry* obsr_storage::create_leaf(obsr_object* parent, const obsr::entry han
     auto data = std::make_shared<obsr_entry>(handle);
 
     auto& registry = get_registry();
-    registry.create(data);
+    registry.create(data, parent->get_id());
 
     m_entries.emplace(obsr::get_path_for_entry(handle), data);
     parent->add_entry(obsr::get_name_for_entry(handle), data.get());

@@ -5,43 +5,46 @@
 
 namespace data {
 
-static std::map<std::string, scheme, std::less<>> create_str_to_scheme_map() {
-    std::map<std::string, scheme, std::less<>> map;
-    map.emplace("canvas_line", scheme::canvas_line);
+static std::map<std::string, scheme::type, std::less<>> create_str_to_scheme_map() {
+    std::map<std::string, scheme::type, std::less<>> map;
+    map.emplace("canvas_line", scheme::type::canvas_line);
+    map.emplace("canvas_rect", scheme::type::canvas_rect);
+    map.emplace("canvas_circle", scheme::type::canvas_circle);
+    map.emplace("canvas_group", scheme::type::canvas_group);
 
     return map;
 }
 
-static scheme get_scheme_from_value(const obsr::value& value) {
+static scheme::type get_scheme_from_value(const obsr::value& value) {
     switch (value.get_type()) {
         case obsr::value_type::string:
-            return scheme::string;
+            return scheme::type::string;
         case obsr::value_type::boolean:
-            return scheme::boolean;
+            return scheme::type::boolean;
         case obsr::value_type::integer32:
         case obsr::value_type::integer64:
         case obsr::value_type::floating_point32:
         case obsr::value_type::floating_point64:
-            return scheme::number;
+            return scheme::type::number;
         case obsr::value_type::integer32_array:
         case obsr::value_type::integer64_array:
         case obsr::value_type::floating_point32_array:
         case obsr::value_type::floating_point64_array:
-            return scheme::array;
+            return scheme::type::array;
         case obsr::value_type::empty:
         case obsr::value_type::raw:
         default:
-            return scheme::unknown;
+            return scheme::type::unknown;
     }
 }
 
-static scheme get_scheme_from_string(const std::string_view type) {
+static scheme::type get_scheme_from_string(const std::string_view type) {
     static auto map = create_str_to_scheme_map();
     if (const auto it = map.find(type); it != map.end()) {
         return it->second;
     }
 
-    return scheme::unknown;
+    return scheme::type::unknown;
 }
 
 static float get_as_number(const obsr::value& value) {
@@ -59,8 +62,9 @@ obsr_entry::obsr_entry(const obsr::entry handle)
     : m_handle(handle)
     , m_id(0)
     , m_name(obsr::get_path_for_entry(handle))
+    , m_has_new_data(true)
     , m_value(obsr::value::make())
-    , m_scheme(scheme::unknown)
+    , m_scheme(scheme::type::unknown)
 {}
 
 uint64_t obsr_entry::get_id() const {
@@ -79,30 +83,37 @@ std::string_view obsr_entry::get_name() const {
     return m_name;
 }
 
+bool obsr_entry::has_new_data() const {
+    return m_has_new_data;
+}
+
 const obsr::value& obsr_entry::get_value() const {
     return m_value;
 }
 
-scheme obsr_entry::get_scheme() const {
+scheme::type obsr_entry::get_scheme() const {
     return m_scheme;
 }
 
 template<>
-number_scheme obsr_entry::read<number_scheme>() {
-    assert(m_scheme == scheme::number);
+scheme::number obsr_entry::read<scheme::number>() {
+    assert(m_scheme == scheme::type::number);
+    m_has_new_data = false;
     return {get_as_number(m_value)};
 }
 
 void obsr_entry::update(const obsr::value& value) {
     m_value = value;
     m_scheme = get_scheme_from_value(m_value);
+    m_has_new_data = true;
 }
 
 obsr_object::obsr_object(const obsr::object handle)
     : m_handle(handle)
     , m_id(0)
     , m_name(obsr::get_path_for_object(handle))
-    , m_scheme(scheme::unknown)
+    , m_has_new_data(true)
+    , m_scheme(scheme::type::unknown)
     , m_children()
     , m_entries()
 {}
@@ -123,20 +134,80 @@ std::string_view obsr_object::get_name() const {
     return m_name;
 }
 
-scheme obsr_object::get_scheme() const {
+bool obsr_object::has_new_data() const {
+    if (m_has_new_data) {
+        return true;
+    }
+
+    for (const auto& child: m_children | std::views::values) {
+        if (child->has_new_data()) {
+            return true;
+        }
+    }
+
+    for (const auto& entry: m_entries | std::views::values) {
+        if (entry->has_new_data()) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+scheme::type obsr_object::get_scheme() const {
     return m_scheme;
 }
 
 template<>
-canvas_line_scheme obsr_object::read<canvas_line_scheme>() {
-    assert(m_scheme == scheme::canvas_line);
+scheme::canvas_line obsr_object::read<scheme::canvas_line>() {
+    assert(m_scheme == scheme::type::canvas_line);
+    m_has_new_data = false;
 
     const auto x = get_entry_value<float>("x", 0);
     const auto y = get_entry_value<float>("y", 0);
     const auto length = get_entry_value<float>("length", 0);
     const auto angle = get_entry_value<float>("angle", 0);
+    const auto color = static_cast<uint32_t>(get_entry_value<int32_t>("color", 0));
 
-    return {x, y, length, angle};
+    return {x, y, length, angle, color};
+}
+
+template<>
+scheme::canvas_rect obsr_object::read<scheme::canvas_rect>() {
+    assert(m_scheme == scheme::type::canvas_rect);
+    m_has_new_data = false;
+
+    const auto x = get_entry_value<float>("x", 0);
+    const auto y = get_entry_value<float>("y", 0);
+    const auto length = get_entry_value<float>("length", 0);
+    const auto width = get_entry_value<float>("width", 0);
+    const auto color = static_cast<uint32_t>(get_entry_value<int32_t>("color", 0));
+
+    return {x, y, length, width, color};
+}
+
+template<>
+scheme::canvas_circle obsr_object::read<scheme::canvas_circle>() {
+    assert(m_scheme == scheme::type::canvas_circle);
+    m_has_new_data = false;
+
+    const auto x = get_entry_value<float>("x", 0);
+    const auto y = get_entry_value<float>("y", 0);
+    const auto radius = get_entry_value<float>("radius", 0);
+    const auto color = static_cast<uint32_t>(get_entry_value<int32_t>("color", 0));
+
+    return {x, y, radius, color};
+}
+
+template<>
+scheme::canvas_group obsr_object::read<scheme::canvas_group>() {
+    assert(m_scheme == scheme::type::canvas_group);
+    m_has_new_data = false;
+
+    const auto x = get_entry_value<float>("x", 0);
+    const auto y = get_entry_value<float>("y", 0);
+
+    return {x, y};
 }
 
 std::optional<obsr_object*> obsr_object::get_child(const std::string_view name) {
@@ -155,12 +226,15 @@ void obsr_object::foreach_child(std::function<void(const obsr_object*)>&& callba
 
 void obsr_object::add_child(const std::string_view name, obsr_object* ptr) {
     m_children.emplace(name, ptr);
+    m_has_new_data = true;
 }
 
 void obsr_object::delete_object(const std::string_view name) {
     if (const auto it = m_children.find(name); it != m_children.end()) {
         m_children.erase(it);
     }
+
+    m_has_new_data = true;
 }
 
 std::optional<obsr_entry*> obsr_object::get_entry(const std::string_view name) {
@@ -179,29 +253,33 @@ void obsr_object::foreach_entry(std::function<void(const obsr_entry*)>&& callbac
 
 void obsr_object::add_entry(const std::string_view name, obsr_entry* ptr) {
     m_entries.emplace(name, ptr);
+    m_has_new_data = true;
 }
 
 void obsr_object::delete_entry(const std::string_view name) {
     if (const auto it = m_entries.find(name); it != m_entries.end()) {
         m_entries.erase(it);
     }
+
+    m_has_new_data = true;
 }
 
 void obsr_object::update() {
     m_scheme = read_type();
+    m_has_new_data = true;
 }
 
-scheme obsr_object::read_type() {
+scheme::type obsr_object::read_type() {
     if (const auto it = m_entries.find(".type"); it != m_entries.end()) {
         const auto& value = it->second->get_value();
         if (value.get_type() != obsr::value_type::string) {
-            return scheme::unknown;
+            return scheme::type::unknown;
         }
 
         return get_scheme_from_string(value.get_string());
     }
 
-    return scheme::unknown;
+    return scheme::type::unknown;
 }
 
 }
