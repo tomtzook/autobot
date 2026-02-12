@@ -11,6 +11,9 @@
 #include "dashboard/toggle.h"
 #include "dashboard/canvas.h"
 
+#include "hal.h"
+#include "hal_sim.h"
+
 using namespace autobot::units::literals;
 
 namespace robot {
@@ -124,6 +127,16 @@ void update() {
 
     auto& registry = autobot::dashboard::get_registry();
     registry.update();
+}
+
+}
+
+namespace sim {
+
+void init() {
+    autobot::hal::initialize(autobot::hal::sim::initialize);
+
+    autobot::hal::sim::define_port(1, "DIO1", autobot::hal::port_type_digital_output);
 }
 
 }

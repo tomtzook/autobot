@@ -4,7 +4,8 @@ project(autobot
         VERSION "1.0.0")
 
 set(CMAKE_C_STANDARD 11)
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 find_package(Eigen3 3.3 REQUIRED NO_MODULE)
 find_package(Threads REQUIRED)
@@ -16,6 +17,7 @@ include(GNUInstallDirs)
 
 add_subdirectory(autobot)
 add_subdirectory(autoboard)
+add_subdirectory(hal)
 
 add_executable(test_robot robot.cpp)
-target_link_libraries(test_robot autobot)
+target_link_libraries(test_robot autobot autobot_hal autobot_hal_sim)
