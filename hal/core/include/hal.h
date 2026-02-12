@@ -9,11 +9,11 @@ namespace autobot::hal {
 void initialize(std::function<void(backend::backend_impl*)>&& initializer);
 
 struct base_device {
-public:
+    base_device();
     explicit base_device(handle handle);
     base_device(const base_device&) = delete;
     base_device(base_device&&) noexcept;
-    ~base_device();
+    virtual ~base_device();
 
     base_device& operator=(const base_device&) = delete;
     base_device& operator=(base_device&&) noexcept;
@@ -23,16 +23,7 @@ public:
     bool operator!=(const base_device& other) const;
 
     [[nodiscard]] bool is_open() const;
-
-    uint32_t read_config_u32(config_key key);
-    float read_config_f32(config_key key);
-    void write_config_u32(config_key key, uint32_t value);
-    void write_config_f32(config_key key, float value);
-
-    uint32_t read_value_u32(value_key key);
-    float read_value_f32(value_key key);
-    void write_value_u32(value_key key, uint32_t value);
-    void write_value_f32(value_key key, float value);
+    [[nodiscard]] inline handle underlying_handle() const { return m_handle;}
 
     void close();
 
@@ -40,16 +31,49 @@ private:
     hal::handle m_handle;
 };
 
-struct digital_port : base_device {
+struct port : base_device {
+    port() = default;
+    explicit port(handle handle);
+    port(port_id id, port_type type);
 
+    [[nodiscard]] uint32_t read_config_u32(config_key key) const;
+    [[nodiscard]] float read_config_f32(config_key key) const;
+    void write_config_u32(config_key key, uint32_t value);
+    void write_config_f32(config_key key, float value);
+
+    [[nodiscard]] uint32_t read_value_u32(value_key key) const;
+    [[nodiscard]] float read_value_f32(value_key key) const;
+    void write_value_u32(value_key key, uint32_t value);
+    void write_value_f32(value_key key, float value);
 };
 
-struct analog_port : base_device {
+struct serial : base_device {
+    serial() = default;
+    explicit serial(handle handle);
+    serial(serial_id id, serial_type type);
 
+    [[nodiscard]] uint32_t read_config_u32(config_key key) const;
+    [[nodiscard]] float read_config_f32(config_key key) const;
+    void write_config_u32(config_key key, uint32_t value);
+    void write_config_f32(config_key key, float value);
+
+    size_t read(std::span<uint8_t> buffer);
+    void write(std::span<const uint8_t> buffer);
+    size_t transact(std::span<const uint8_t> write_buffer, std::span<uint8_t> read_buffer);
 };
 
-struct pwm_port : base_device {
+struct digital_port final : port {
+    digital_port() = default;
+    explicit digital_port(handle handle);
+    digital_port(port_id id, bool output);
 
+    [[nodiscard]] digital_poll_edge poll_edge() const;
+    void poll_edge(digital_poll_edge value);
+    [[nodiscard]] digital_resistor_mode resistor_mode() const;
+    void resistor_mode(digital_resistor_mode value);
+
+    [[nodiscard]] digital_signal_value read() const;
+    void write(digital_signal_value value);
 };
 
 }

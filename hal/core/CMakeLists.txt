@@ -12,8 +12,6 @@ set(SOURCES
         src/hal_config.cpp
         src/hal_value.cpp
         src/hal_actions.cpp
-        src/ports.h
-        src/ports.cpp
         src/handles.h
         src/global.h
         src/handles.cpp
@@ -21,6 +19,7 @@ set(SOURCES
         src/backend.cpp
         src/control.cpp
         src/global.cpp
+        src/hal_serial.cpp
 )
 
 add_library(autobot_hal STATIC ${SOURCES})

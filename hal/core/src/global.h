@@ -18,9 +18,13 @@ struct global_data {
     backend::backend_impl backend;
     std::unordered_map<handle, handle_node> handles;
     std::unordered_map<port_id, port> ports;
+    std::unordered_map<serial_id, serial> serials;
 };
 
 std::unique_lock<std::mutex> lock_instance();
 global_data& get_global_data();
+
+std::optional<const port*> lookup_port(port_id id);
+std::optional<const serial*> lookup_serial(serial_id id);
 
 }

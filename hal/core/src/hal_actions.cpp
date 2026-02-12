@@ -13,12 +13,13 @@ result<void> initialize(const backend::backend_impl* impl) {
 
     auto& global_data = get_global_data();
     global_data.backend = *impl;
+    global_data.backend_initialized = true;
 
     if (const auto result = backend::create(); !result) {
+        global_data.backend_initialized = false;
         return error_result(result.error());
     }
 
-    global_data.backend_initialized = true;
     return {};
 }
 
@@ -42,10 +43,40 @@ result<handle> open_port(const port_id id, const port_type type) {
 
     auto [handle, node] = allocate_result.value();
     node->type = handle_type::port;
-    node->src.port = port;
-    node->src.type = type;
+    node->src.port.port = port;
+    node->src.port.type = type;
 
     if (const auto result = backend::port_new(*node); !result) {
+        release_handle(handle);
+    }
+
+    return handle;
+}
+
+result<handle> open_serial(const serial_id id, const serial_type type) {
+    const auto lock = lock_instance();
+
+    const auto opt = lookup_serial(id);
+    if (!opt) {
+        return error_result(error::serial_not_exists);
+    }
+
+    const auto& serial = opt.value();
+    if (type != serial->type) {
+        return error_result(error::type_unsupported_by_serial);
+    }
+
+    const auto allocate_result = allocate_handle();
+    if (!allocate_result) {
+        return error_result(allocate_result.error());
+    }
+
+    auto [handle, node] = allocate_result.value();
+    node->type = handle_type::serial;
+    node->src.serial.serial = serial;
+    node->src.serial.type = type;
+
+    if (const auto result = backend::serial_new(*node); !result) {
         release_handle(handle);
     }
 
@@ -60,10 +91,17 @@ result<void> close(const handle handle) {
         return error_result(error::no_such_handle);
     }
 
-    const auto& node = opt.value();
-
-    if (const auto result = backend::port_delete(*node); !result) {
-        // TODO: TRACE!
+    switch (const auto& node = opt.value(); node->type) {
+        case handle_type::port:
+            if (const auto result = backend::port_delete(*node); !result) {
+                // TODO: TRACE!
+            }
+            break;
+        case handle_type::serial:
+            if (const auto result = backend::serial_delete(*node); !result) {
+                // TODO: TRACE!
+            }
+            break;
     }
 
     release_handle(handle);

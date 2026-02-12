@@ -22,12 +22,29 @@ static result<void> verify_valid_params(const handle handle, const config_key ke
 static result<void> verify_valid_request(const handle_node* node, const config_key key, const data_type type, const bool write) {
     switch (node->type) {
         case handle_type::port: {
-            const auto& def = node->src.port->configs[key];
+            const auto& def = node->src.port.port->configs[key];
             if (!def.supported) {
                 return error_result(error::unsupported_config);
             }
 
-            if ((def.supported_types & node->src.type) != node->src.type) {
+            if ((def.supported_types & node->src.port.type) != node->src.port.type) {
+                return error_result(error::unsupported_config);
+            }
+
+            if (def.type != type) {
+                return error_result(error::invalid_data_type_for_config);
+            }
+
+            if ((write && def.permission == data_permission::readonly) ||
+                (!write && def.permission == data_permission::writeonly)) {
+                return error_result(error::no_permissions_for_config_access);
+            }
+
+            break;
+        }
+        case handle_type::serial: {
+            const auto& def = node->src.serial.serial->configs[key];
+            if (!def.supported) {
                 return error_result(error::unsupported_config);
             }
 
@@ -66,6 +83,8 @@ result<uint32_t> config_read_u32(const handle handle, const config_key key) {
     switch (node->type) {
         case handle_type::port:
             return backend::port_config_read_u32(*node, key);
+        case handle_type::serial:
+            return backend::serial_config_read_u32(*node, key);
         default:
             return error_result(error::unsupported_operation_for_type);
     }
@@ -90,6 +109,8 @@ result<float> config_read_f32(const handle handle, const config_key key) {
     switch (node->type) {
         case handle_type::port:
             return backend::port_config_read_f32(*node, key);
+        case handle_type::serial:
+            return backend::serial_config_read_f32(*node, key);
         default:
             return error_result(error::unsupported_operation_for_type);
     }
@@ -114,6 +135,8 @@ result<void> config_write_u32(const handle handle, const config_key key, const u
     switch (node->type) {
         case handle_type::port:
             return backend::port_config_write_u32(*node, key, value);
+        case handle_type::serial:
+            return backend::serial_config_write_u32(*node, key, value);
         default:
             return error_result(error::unsupported_operation_for_type);
     }
@@ -138,6 +161,8 @@ result<void> config_write_f32(const handle handle, const config_key key, const f
     switch (node->type) {
         case handle_type::port:
             return backend::port_config_write_f32(*node, key, value);
+        case handle_type::serial:
+            return backend::serial_config_write_f32(*node, key, value);
         default:
             return error_result(error::unsupported_operation_for_type);
     }

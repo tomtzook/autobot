@@ -38,70 +38,133 @@ result<void> port_new(const handle_node& node) {
     const auto* backend = get_backend();
     verify_func_exists(backend, port_new);
 
-    return backend->port_new(node.src.port->id, node.src.type);
+    return backend->port_new(node.src.port.port->id, node.src.port.type);
 }
 
 result<void> port_delete(const handle_node& node) {
     const auto* backend = get_backend();
     verify_func_exists(backend, port_delete);
 
-    return backend->port_delete(node.src.port->id, node.src.type);
+    return backend->port_delete(node.src.port.port->id, node.src.port.type);
 }
 
 result<uint32_t> port_config_read_u32(const handle_node& node, const config_key key) {
     const auto* backend = get_backend();
     verify_func_exists(backend, port_config_read_u32);
 
-    return backend->port_config_read_u32(node.src.port->id, node.src.type, key);
+    return backend->port_config_read_u32(node.src.port.port->id, node.src.port.type, key);
 }
 
 result<float> port_config_read_f32(const handle_node& node, const config_key key) {
     const auto* backend = get_backend();
     verify_func_exists(backend, port_config_read_f32);
 
-    return backend->port_config_read_f32(node.src.port->id, node.src.type, key);
+    return backend->port_config_read_f32(node.src.port.port->id, node.src.port.type, key);
 }
 
 result<void> port_config_write_u32(const handle_node& node, const config_key key, const uint32_t value) {
     const auto* backend = get_backend();
     verify_func_exists(backend, port_config_write_u32);
 
-    return backend->port_config_write_u32(node.src.port->id, node.src.type, key, value);
+    return backend->port_config_write_u32(node.src.port.port->id, node.src.port.type, key, value);
 }
 
 result<void> port_config_write_f32(const handle_node& node, const config_key key, const float value) {
     const auto* backend = get_backend();
     verify_func_exists(backend, port_config_write_f32);
 
-    return backend->port_config_write_f32(node.src.port->id, node.src.type, key, value);
+    return backend->port_config_write_f32(node.src.port.port->id, node.src.port.type, key, value);
 }
 
 result<uint32_t> port_value_read_u32(const handle_node& node, const value_key key) {
     const auto* backend = get_backend();
     verify_func_exists(backend, port_value_read_u32);
 
-    return backend->port_value_read_u32(node.src.port->id, node.src.type, key);
+    return backend->port_value_read_u32(node.src.port.port->id, node.src.port.type, key);
 }
 
 result<float> port_value_read_f32(const handle_node& node, const value_key key) {
     const auto* backend = get_backend();
     verify_func_exists(backend, port_value_read_f32);
 
-    return backend->port_value_read_f32(node.src.port->id, node.src.type, key);
+    return backend->port_value_read_f32(node.src.port.port->id, node.src.port.type, key);
 }
 
 result<void> port_value_write_u32(const handle_node& node, const value_key key, const uint32_t value) {
     const auto* backend = get_backend();
     verify_func_exists(backend, port_value_write_u32);
 
-    return backend->port_value_write_u32(node.src.port->id, node.src.type, key, value);
+    return backend->port_value_write_u32(node.src.port.port->id, node.src.port.type, key, value);
 }
 
 result<void> port_value_write_f32(const handle_node& node, const value_key key, const float value) {
     const auto* backend = get_backend();
     verify_func_exists(backend, port_value_write_f32);
 
-    return backend->port_value_write_f32(node.src.port->id, node.src.type, key, value);
+    return backend->port_value_write_f32(node.src.port.port->id, node.src.port.type, key, value);
+}
+
+result<void> serial_new(const handle_node& node) {
+    const auto* backend = get_backend();
+    verify_func_exists(backend, serial_new);
+
+    return backend->serial_new(node.src.serial.serial->id, node.src.serial.type);
+}
+
+result<void> serial_delete(const handle_node& node) {
+    const auto* backend = get_backend();
+    verify_func_exists(backend, serial_delete);
+
+    return backend->serial_delete(node.src.serial.serial->id, node.src.serial.type);
+}
+
+result<uint32_t> serial_config_read_u32(const handle_node& node, const config_key key) {
+    const auto* backend = get_backend();
+    verify_func_exists(backend, serial_config_read_u32);
+
+    return backend->serial_config_read_u32(node.src.serial.serial->id, node.src.serial.type, key);
+}
+
+result<float> serial_config_read_f32(const handle_node& node, const config_key key) {
+    const auto* backend = get_backend();
+    verify_func_exists(backend, serial_config_read_f32);
+
+    return backend->serial_config_read_f32(node.src.serial.serial->id, node.src.serial.type, key);
+}
+
+result<void> serial_config_write_u32(const handle_node& node, const config_key key, const uint32_t value) {
+    const auto* backend = get_backend();
+    verify_func_exists(backend, serial_config_write_u32);
+
+    return backend->serial_config_write_u32(node.src.serial.serial->id, node.src.serial.type, key, value);
+}
+
+result<void> serial_config_write_f32(const handle_node& node, const config_key key, const float value) {
+    const auto* backend = get_backend();
+    verify_func_exists(backend, serial_config_write_f32);
+
+    return backend->serial_config_write_f32(node.src.serial.serial->id, node.src.serial.type, key, value);
+}
+
+result<size_t> serial_read(const handle_node& node, const std::span<uint8_t> buffer) {
+    const auto* backend = get_backend();
+    verify_func_exists(backend, serial_read);
+
+    return backend->serial_read(node.src.serial.serial->id, node.src.serial.type, buffer);
+}
+
+result<void> serial_write(const handle_node& node, const std::span<const uint8_t> buffer) {
+    const auto* backend = get_backend();
+    verify_func_exists(backend, serial_write);
+
+    return backend->serial_write(node.src.serial.serial->id, node.src.serial.type, buffer);
+}
+
+result<size_t> serial_transact(const handle_node& node, const std::span<const uint8_t> write_buffer, const std::span<uint8_t> read_buffer) {
+    const auto* backend = get_backend();
+    verify_func_exists(backend, serial_transact);
+
+    return backend->serial_transact(node.src.serial.serial->id, node.src.serial.type, write_buffer, read_buffer);
 }
 
 }

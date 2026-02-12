@@ -238,6 +238,39 @@ public:
     }
 };
 
+class serial_not_exists_exception final : public hal_exception {
+public:
+    serial_not_exists_exception()
+        : hal_exception(error::serial_not_exists)
+    {};
+
+    [[nodiscard]] const char* what() const noexcept override {
+        return "requested serial does not exist";
+    }
+};
+
+class type_unsupported_by_serial_exception final : public hal_exception {
+public:
+    type_unsupported_by_serial_exception()
+        : hal_exception(error::type_unsupported_by_serial)
+    {};
+
+    [[nodiscard]] const char* what() const noexcept override {
+        return "requested type is not supported for requested serial";
+    }
+};
+
+class serial_already_configured_exception final : public hal_exception {
+public:
+    serial_already_configured_exception()
+        : hal_exception(error::serial_already_configured)
+    {};
+
+    [[nodiscard]] const char* what() const noexcept override {
+        return "serial with given ID is already configured and cannot be again";
+    }
+};
+
 template<typename t_>
 void result_to_exception(const result<t_>& res) {
     if (res) {
@@ -285,6 +318,12 @@ void result_to_exception(const result<t_>& res) {
             throw port_not_defined_exception();
         case error::port_not_open:
             throw port_not_open_exception();
+        case error::serial_not_exists:
+            throw serial_not_exists_exception();
+        case error::type_unsupported_by_serial:
+            throw type_unsupported_by_serial_exception();
+        case error::serial_already_configured:
+            throw serial_already_configured_exception();
         default:
             throw hal_exception(res.error());
     }

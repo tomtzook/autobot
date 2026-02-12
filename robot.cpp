@@ -50,6 +50,8 @@ autobot::dashboard::toggle run_toggle;
 autobot::dashboard::canvas_group group1;
 autobot::dashboard::canvas_group group2;
 
+autobot::hal::digital_port dio_switch1;
+
 void init() {
     pid.min_out(pid_min_out);
     pid.max_out(pid_max_out);
@@ -98,6 +100,8 @@ void init() {
         circle1.background(autobot::dashboard::rgba(255, 255, 255, 255));
     }
 
+    dio_switch1 = autobot::hal::digital_port(1, true);
+
     registry.update();
 
     sleep(5);
@@ -135,7 +139,6 @@ namespace sim {
 
 void init() {
     autobot::hal::initialize(autobot::hal::sim::initialize);
-
     autobot::hal::sim::define_port(1, "DIO1", autobot::hal::port_type_digital_output);
 }
 
@@ -143,6 +146,7 @@ void init() {
 
 int main() {
     obsr::start_server(50000);
+    sim::init();
     robot::init();
 
     auto last_update_time = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());

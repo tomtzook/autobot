@@ -29,6 +29,12 @@ struct port {
     value_def values[max_value_key];
 };
 
-std::optional<const port*> lookup_port(port_id id);
+struct serial {
+    serial_id id;
+    const char* name;
+    serial_type type;
+
+    config_def configs[max_config_key];
+};
 
 }

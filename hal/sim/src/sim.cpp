@@ -21,6 +21,12 @@ result<void> define_port(const port_id id, const char* name, const port_type sup
     port.id = id;
     port.name = name;
     port.supported_types = supported_types;
+
+    port.obsr.root = obsr::get_child(data.root_obsr_object, name);
+    port.obsr.open_port = obsr::get_child(port.obsr.root, "open");
+    port.obsr.id_entry = obsr::get_entry(port.obsr.root, "id");
+    obsr::set_value(port.obsr.id_entry, obsr::value::make_int32(id));
+
     data.ports.emplace(id, port);
 
     return {};

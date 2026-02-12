@@ -9,14 +9,21 @@
 namespace autobot::hal {
 
 enum class handle_type {
-    port
+    port,
+    serial
 };
 
 struct handle_node {
     handle_type type;
-    struct {
-        const port* port;
-        port_type type;
+    union {
+        struct {
+            const port* port;
+            port_type type;
+        } port;
+        struct {
+            serial_type type;
+            const serial* serial;
+        } serial;
     } src;
 };
 

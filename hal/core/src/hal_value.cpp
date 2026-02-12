@@ -22,12 +22,12 @@ static result<void> verify_valid_params(const handle handle, const value_key key
 static result<void> verify_valid_request(const handle_node* node, const value_key key, const data_type type, const bool write) {
     switch (node->type) {
         case handle_type::port: {
-            const auto& def = node->src.port->values[key];
+            const auto& def = node->src.port.port->values[key];
             if (!def.supported) {
                 return error_result(error::unsupported_value);
             }
 
-            if ((def.supported_types & node->src.type) != node->src.type) {
+            if ((def.supported_types & node->src.port.type) != node->src.port.type) {
                 return error_result(error::unsupported_value);
             }
 
@@ -42,6 +42,8 @@ static result<void> verify_valid_request(const handle_node* node, const value_ke
 
             break;
         }
+        case handle_type::serial:
+            return error_result(error::unsupported_value);
     }
 
     return {};

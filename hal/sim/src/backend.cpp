@@ -9,6 +9,11 @@ namespace autobot::hal::sim {
 namespace {
 
 result<void> create() {
+    const auto lock = lock_instance();
+
+    auto& data = get_global_data();
+    data.root_obsr_object = obsr::get_object("autobot/hal/sim");
+
     return {};
 }
 
