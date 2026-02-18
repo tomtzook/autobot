@@ -3,6 +3,8 @@
 
 #include "handles.h"
 
+#include <ranges>
+
 namespace autobot::hal {
 
 static handle find_free_handle() {
@@ -42,6 +44,18 @@ std::optional<handle_node*> lookup_handle(const handle handle) {
     auto& global_data = get_global_data();
     if (const auto it = global_data.handles.find(handle); it != global_data.handles.end()) {
         return &it->second;
+    }
+
+    return std::nullopt;
+}
+
+std::optional<handle_node*> lookup_handle_to(const device& device) {
+    auto& global_data = get_global_data();
+
+    for (auto& data : global_data.handles | std::views::values) {
+        if (data.device->id == device.id) {
+            return &data;
+        }
     }
 
     return std::nullopt;

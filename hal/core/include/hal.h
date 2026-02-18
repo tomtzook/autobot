@@ -31,10 +31,10 @@ private:
     hal::handle m_handle;
 };
 
-struct port : base_device {
-    port() = default;
-    explicit port(handle handle);
-    port(port_id id, port_type type);
+struct device : base_device {
+    device() = default;
+    explicit device(handle handle);
+    device(device_id id, device_type type);
 
     [[nodiscard]] uint32_t read_config_u32(config_key key) const;
     [[nodiscard]] float read_config_f32(config_key key) const;
@@ -45,27 +45,16 @@ struct port : base_device {
     [[nodiscard]] float read_value_f32(value_key key) const;
     void write_value_u32(value_key key, uint32_t value);
     void write_value_f32(value_key key, float value);
-};
-
-struct serial : base_device {
-    serial() = default;
-    explicit serial(handle handle);
-    serial(serial_id id, serial_type type);
-
-    [[nodiscard]] uint32_t read_config_u32(config_key key) const;
-    [[nodiscard]] float read_config_f32(config_key key) const;
-    void write_config_u32(config_key key, uint32_t value);
-    void write_config_f32(config_key key, float value);
 
     size_t read(std::span<uint8_t> buffer);
     void write(std::span<const uint8_t> buffer);
     size_t transact(std::span<const uint8_t> write_buffer, std::span<uint8_t> read_buffer);
 };
 
-struct digital_port final : port {
+struct digital_port final : device {
     digital_port() = default;
     explicit digital_port(handle handle);
-    digital_port(port_id id, bool output);
+    digital_port(device_id id, bool output);
 
     [[nodiscard]] digital_poll_edge poll_edge() const;
     void poll_edge(digital_poll_edge value);

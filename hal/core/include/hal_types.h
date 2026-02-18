@@ -7,12 +7,10 @@
 namespace autobot::hal {
 
 using handle = uint32_t;
-using port_id = uint8_t;
-using port_type = uint8_t;
-using serial_id = uint8_t;
-using serial_type = uint8_t;
-using config_key = uint16_t;
-using value_key = uint16_t;
+using device_id = uint32_t;
+using device_type = uint64_t;
+using config_key = uint8_t;
+using value_key = uint8_t;
 
 static constexpr handle invalid_handle = 0;
 static constexpr handle min_handle = 1;
@@ -22,8 +20,8 @@ static constexpr config_key max_config_key = 128;
 static constexpr value_key max_value_key = 128;
 
 enum class error {
-    port_not_exists = 1,
-    type_unsupported_by_port = 2,
+    device_not_exists = 1,
+    type_unsupported_by_device = 2,
     no_more_handles = 3,
     handle_allocation_failure = 4,
     no_such_handle = 5,
@@ -39,12 +37,10 @@ enum class error {
     unsupported_operation_for_type = 15,
     backend_not_configured = 16,
     backend_does_not_support_operation = 17,
-    port_already_configured = 18,
-    port_not_defined = 19,
-    port_not_open = 20,
-    serial_not_exists = 21,
-    type_unsupported_by_serial = 22,
-    serial_already_configured = 23
+    device_already_configured = 18,
+    device_not_defined = 19,
+    device_not_open = 20,
+    cannot_configure_while_open = 21
 };
 
 template<typename t_>
@@ -56,24 +52,66 @@ enum class data_type : uint8_t {
     floating_32bit
 };
 
+inline const char* data_type_str(const data_type value) {
+    switch (value) {
+        case data_type::unsigned_32bit:
+            return "unsigned_32bit";
+        case data_type::floating_32bit:
+            return "floating_32bit";
+        default:
+            return "";
+    }
+}
+
 enum class data_permission : uint8_t {
     readonly,
     writeonly,
     readwrite
 };
 
-enum : port_type {
+inline const char* data_permission_str(const data_permission value) {
+    switch (value) {
+        case data_permission::readonly:
+            return "readonly";
+        case data_permission::writeonly:
+            return "writeonly";
+        case data_permission::readwrite:
+            return "readwrite";
+        default:
+            return "";
+    }
+}
+
+enum : device_type {
     port_type_digital_input = 1 << 0,
     port_type_digital_output = 1 << 1,
     port_type_analog_input = 1 << 2,
     port_type_analog_output = 1 << 3,
     port_type_pwm_output = 1 << 4,
+    serial_type_i2c = 1 << 5,
+    serial_type_spi = 1 << 6,
 };
 
-enum : serial_type {
-    serial_type_i2c = 1 << 0,
-    serial_type_spi = 1 << 1,
-};
+inline const char* port_type_str(const device_type value) {
+    switch (value) {
+        case port_type_digital_input:
+            return "digital_input";
+        case port_type_digital_output:
+            return "digital_output";
+        case port_type_analog_input:
+            return "analog_input";
+        case port_type_analog_output:
+            return "analog_output";
+        case port_type_pwm_output:
+            return "pwm_output";
+        case serial_type_i2c:
+            return "i2c";
+        case serial_type_spi:
+            return "spi";
+        default:
+            return "";
+    }
+}
 
 enum : config_key {
     config_digital_poll_edge = 1, // u32, rw, digital_poll_edge

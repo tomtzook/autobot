@@ -15,4 +15,4 @@ target_include_directories(autobot_hal_sim
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/src)
-target_link_libraries(autobot_hal_sim autobot_hal obsr::obsr)
+target_link_libraries(autobot_hal_sim autobot_hal)

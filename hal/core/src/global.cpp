@@ -8,7 +8,7 @@ namespace autobot::hal {
 
 static void close_all_handles() {
     for (auto& global_data = get_global_data(); auto data: global_data.handles | std::views::values) {
-        if (const auto result = backend::port_delete(data); !result) {
+        if (const auto result = backend::free_device(data); !result) {
             // TODO: TRACE!
         }
     }
@@ -21,8 +21,9 @@ static void close_all_handles() {
 global_data::global_data()
     : mutex()
     , backend()
+    , root_obsr_object(obsr::get_object("/autobot/hal"))
     , handles()
-    , ports() {
+    , devices() {
 }
 
 global_data::~global_data() {
@@ -38,18 +39,9 @@ global_data& get_global_data() {
     return data;
 }
 
-std::optional<const port*> lookup_port(const port_id id) {
+std::optional<const device*> lookup_device(const device_id id) {
     auto& global_data = get_global_data();
-    if (const auto it = global_data.ports.find(id); it != global_data.ports.end()) {
-        return &it->second;
-    }
-
-    return std::nullopt;
-}
-
-std::optional<const serial*> lookup_serial(const serial_id id) {
-    auto& global_data = get_global_data();
-    if (const auto it = global_data.serials.find(id); it != global_data.serials.end()) {
+    if (const auto it = global_data.devices.find(id); it != global_data.devices.end()) {
         return &it->second;
     }
 

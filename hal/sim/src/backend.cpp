@@ -9,11 +9,6 @@ namespace autobot::hal::sim {
 namespace {
 
 result<void> create() {
-    const auto lock = lock_instance();
-
-    auto& data = get_global_data();
-    data.root_obsr_object = obsr::get_object("autobot/hal/sim");
-
     return {};
 }
 
@@ -21,34 +16,34 @@ result<void> destroy() {
     return {};
 }
 
-result<void> port_new(const port_id id, const port_type type) {
+result<void> init_device(const device_id id, const device_type type) {
     const auto lock = lock_instance();
 
     auto& data = get_global_data();
-    const auto it = data.ports.find(id);
-    if (it == data.ports.end()) {
-        return error_result(error::port_not_defined);
+    const auto it = data.devices.find(id);
+    if (it == data.devices.end()) {
+        return error_result(error::device_not_defined);
     }
 
     auto& port = it->second;
-    port.open.type = type;
+    port.open_type = type;
     port.is_open = true;
 
     return {};
 }
 
-result<void> port_delete(const port_id id, const port_type) {
+result<void> free_device(const device_id id, const device_type) {
     const auto lock = lock_instance();
 
     auto& data = get_global_data();
-    const auto it = data.ports.find(id);
-    if (it == data.ports.end()) {
-        return error_result(error::port_not_defined);
+    const auto it = data.devices.find(id);
+    if (it == data.devices.end()) {
+        return error_result(error::device_not_defined);
     }
 
     auto& port = it->second;
     if (!port.is_open) {
-        return error_result(error::port_not_open);
+        return error_result(error::device_not_open);
     }
 
     port.is_open = false;
@@ -56,143 +51,143 @@ result<void> port_delete(const port_id id, const port_type) {
     return {};
 }
 
-result<uint32_t> port_config_read_u32(const port_id id, const port_type type, const config_key key) {
+result<uint32_t> config_read_u32(const device_id id, const device_type type, const config_key key) {
     const auto lock = lock_instance();
 
     auto& data = get_global_data();
-    const auto it = data.ports.find(id);
-    if (it == data.ports.end()) {
-        return error_result(error::port_not_defined);
+    const auto it = data.devices.find(id);
+    if (it == data.devices.end()) {
+        return error_result(error::device_not_defined);
     }
 
     const auto& port = it->second;
     if (!port.is_open) {
-        return error_result(error::port_not_open);
+        return error_result(error::device_not_open);
     }
 
-    return port.open.configs[key].u32;
+    return port.configs[key].u32;
 }
 
-result<float> port_config_read_f32(const port_id id, const port_type type, const config_key key) {
+result<float> config_read_f32(const device_id id, const device_type type, const config_key key) {
     const auto lock = lock_instance();
 
     auto& data = get_global_data();
-    const auto it = data.ports.find(id);
-    if (it == data.ports.end()) {
-        return error_result(error::port_not_defined);
+    const auto it = data.devices.find(id);
+    if (it == data.devices.end()) {
+        return error_result(error::device_not_defined);
     }
 
     const auto& port = it->second;
     if (!port.is_open) {
-        return error_result(error::port_not_open);
+        return error_result(error::device_not_open);
     }
 
-    return port.open.configs[key].f32;
+    return port.configs[key].f32;
 }
 
-result<void> port_config_write_u32(const port_id id, const port_type type, const config_key key, const uint32_t value) {
+result<void> config_write_u32(const device_id id, const device_type type, const config_key key, const uint32_t value) {
     const auto lock = lock_instance();
 
     auto& data = get_global_data();
-    const auto it = data.ports.find(id);
-    if (it == data.ports.end()) {
-        return error_result(error::port_not_defined);
+    const auto it = data.devices.find(id);
+    if (it == data.devices.end()) {
+        return error_result(error::device_not_defined);
     }
 
     auto& port = it->second;
     if (!port.is_open) {
-        return error_result(error::port_not_open);
+        return error_result(error::device_not_open);
     }
 
-    port.open.configs[key].u32 = value;
+    port.configs[key].u32 = value;
     return {};
 }
 
-result<void> port_config_write_f32(const port_id id, const port_type type, const config_key key, const float value) {
+result<void> config_write_f32(const device_id id, const device_type type, const config_key key, const float value) {
     const auto lock = lock_instance();
 
     auto& data = get_global_data();
-    const auto it = data.ports.find(id);
-    if (it == data.ports.end()) {
-        return error_result(error::port_not_defined);
+    const auto it = data.devices.find(id);
+    if (it == data.devices.end()) {
+        return error_result(error::device_not_defined);
     }
 
     auto& port = it->second;
     if (!port.is_open) {
-        return error_result(error::port_not_open);
+        return error_result(error::device_not_open);
     }
 
-    port.open.configs[key].f32 = value;
+    port.configs[key].f32 = value;
     return {};
 }
 
-result<uint32_t> port_value_read_u32(const port_id id, const port_type type, const value_key key) {
+result<uint32_t> value_read_u32(const device_id id, const device_type type, const value_key key) {
     const auto lock = lock_instance();
 
     auto& data = get_global_data();
-    const auto it = data.ports.find(id);
-    if (it == data.ports.end()) {
-        return error_result(error::port_not_defined);
+    const auto it = data.devices.find(id);
+    if (it == data.devices.end()) {
+        return error_result(error::device_not_defined);
     }
 
     const auto& port = it->second;
     if (!port.is_open) {
-        return error_result(error::port_not_open);
+        return error_result(error::device_not_open);
     }
 
-    return port.open.values[key].u32;
+    return port.values[key].u32;
 }
 
-result<float> port_value_read_f32(const port_id id, const port_type type, const value_key key) {
+result<float> value_read_f32(const device_id id, const device_type type, const value_key key) {
     const auto lock = lock_instance();
 
     auto& data = get_global_data();
-    const auto it = data.ports.find(id);
-    if (it == data.ports.end()) {
-        return error_result(error::port_not_defined);
+    const auto it = data.devices.find(id);
+    if (it == data.devices.end()) {
+        return error_result(error::device_not_defined);
     }
 
     const auto& port = it->second;
     if (!port.is_open) {
-        return error_result(error::port_not_open);
+        return error_result(error::device_not_open);
     }
 
-    return port.open.values[key].f32;
+    return port.values[key].f32;
 }
 
-result<void> port_value_write_u32(const port_id id, const port_type type, const value_key key, const uint32_t value) {
+result<void> value_write_u32(const device_id id, const device_type type, const value_key key, const uint32_t value) {
     const auto lock = lock_instance();
 
     auto& data = get_global_data();
-    const auto it = data.ports.find(id);
-    if (it == data.ports.end()) {
-        return error_result(error::port_not_defined);
+    const auto it = data.devices.find(id);
+    if (it == data.devices.end()) {
+        return error_result(error::device_not_defined);
     }
 
     auto& port = it->second;
     if (!port.is_open) {
-        return error_result(error::port_not_open);
+        return error_result(error::device_not_open);
     }
 
-    port.open.values[key].u32 = value;
+    port.values[key].u32 = value;
     return {};
 }
 
-result<void> port_value_write_f32(const port_id id, const port_type type, const value_key key, const float value) {
+result<void> value_write_f32(const device_id id, const device_type type, const value_key key, const float value) {
     const auto lock = lock_instance();
 
     auto& data = get_global_data();
-    const auto it = data.ports.find(id);
-    if (it == data.ports.end()) {
-        return error_result(error::port_not_defined);
+    const auto it = data.devices.find(id);
+    if (it == data.devices.end()) {
+        return error_result(error::device_not_defined);
     }
 
     auto& port = it->second;
     if (!port.is_open) {
-        return error_result(error::port_not_open);
+        return error_result(error::device_not_open);
     }
 
-    port.open.values[key].f32 = value;
+    port.values[key].f32 = value;
     return {};
 }
 
@@ -203,16 +198,16 @@ void initialize(backend::backend_impl* impl) {
 
     impl->create = create;
     impl->destroy = destroy;
-    impl->port_new = port_new;
-    impl->port_delete = port_delete;
-    impl->port_config_read_u32 = port_config_read_u32;
-    impl->port_config_read_f32 = port_config_read_f32;
-    impl->port_config_write_u32 = port_config_write_u32;
-    impl->port_config_write_f32 = port_config_write_f32;
-    impl->port_value_read_u32 = port_value_read_u32;
-    impl->port_value_read_f32 = port_value_read_f32;
-    impl->port_value_write_u32 = port_value_write_u32;
-    impl->port_value_write_f32 = port_value_write_f32;
+    impl->init_device = init_device;
+    impl->free_device = free_device;
+    impl->config_read_u32 = config_read_u32;
+    impl->config_read_f32 = config_read_f32;
+    impl->config_write_u32 = config_write_u32;
+    impl->config_write_f32 = config_write_f32;
+    impl->value_read_u32 = value_read_u32;
+    impl->value_read_f32 = value_read_f32;
+    impl->value_write_u32 = value_write_u32;
+    impl->value_write_f32 = value_write_f32;
 }
 
 }

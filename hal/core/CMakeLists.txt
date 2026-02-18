@@ -11,7 +11,7 @@ set(SOURCES
         src/hal.cpp
         src/hal_config.cpp
         src/hal_value.cpp
-        src/hal_actions.cpp
+        src/hal_create.cpp
         src/handles.h
         src/global.h
         src/handles.cpp
@@ -20,6 +20,8 @@ set(SOURCES
         src/control.cpp
         src/global.cpp
         src/hal_serial.cpp
+        src/hal_obsr.h
+        src/hal_obsr.cpp
 )
 
 add_library(autobot_hal STATIC ${SOURCES})
@@ -28,3 +30,4 @@ target_include_directories(autobot_hal
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/src)
+target_link_libraries(autobot_hal obsr::obsr)

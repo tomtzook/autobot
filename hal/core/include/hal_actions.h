@@ -9,8 +9,7 @@ namespace autobot::hal {
 
 result<void> initialize(const backend::backend_impl* impl);
 
-result<handle> open_port(port_id id, port_type type);
-result<handle> open_serial(serial_id id, serial_type type);
+result<handle> open(device_id id, device_type type);
 result<void> close(handle handle);
 
 result<uint32_t> config_read_u32(handle handle, config_key key);

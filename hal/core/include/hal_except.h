@@ -18,25 +18,25 @@ public:
     const error error;
 };
 
-class port_not_exists_exception final : public hal_exception {
+class device_not_exists_exception final : public hal_exception {
 public:
-    port_not_exists_exception()
-        : hal_exception(error::port_not_exists)
+    device_not_exists_exception()
+        : hal_exception(error::device_not_exists)
     {};
 
     [[nodiscard]] const char* what() const noexcept override {
-        return "requested port does not exist";
+        return "requested device does not exist";
     }
 };
 
-class type_unsupported_by_port_exception final : public hal_exception {
+class type_unsupported_by_device_exception final : public hal_exception {
 public:
-    type_unsupported_by_port_exception()
-        : hal_exception(error::type_unsupported_by_port)
+    type_unsupported_by_device_exception()
+        : hal_exception(error::type_unsupported_by_device)
     {};
 
     [[nodiscard]] const char* what() const noexcept override {
-        return "requested type is not supported for requested port";
+        return "requested type is not supported for requested device";
     }
 };
 
@@ -205,69 +205,47 @@ public:
     }
 };
 
-class port_already_configured_exception final : public hal_exception {
+class device_already_configured_exception final : public hal_exception {
 public:
-    port_already_configured_exception()
-        : hal_exception(error::port_already_configured)
+    device_already_configured_exception()
+        : hal_exception(error::device_already_configured)
     {};
 
     [[nodiscard]] const char* what() const noexcept override {
-        return "port with given ID is already configured and cannot be again";
+        return "device with given ID is already configured and cannot be again";
     }
 };
 
-class port_not_defined_exception final : public hal_exception {
+class device_not_defined_exception final : public hal_exception {
 public:
-    port_not_defined_exception()
-        : hal_exception(error::port_not_defined)
+    device_not_defined_exception()
+        : hal_exception(error::device_not_defined)
     {};
 
     [[nodiscard]] const char* what() const noexcept override {
-        return "requested port is not defined and cannot be used";
+        return "requested device is not defined and cannot be used";
     }
 };
 
-class port_not_open_exception final : public hal_exception {
+class device_not_open_exception final : public hal_exception {
 public:
-    port_not_open_exception()
-        : hal_exception(error::port_not_open)
+    device_not_open_exception()
+        : hal_exception(error::device_not_open)
     {};
 
     [[nodiscard]] const char* what() const noexcept override {
-        return "requested port is not open";
+        return "requested device is not open";
     }
 };
 
-class serial_not_exists_exception final : public hal_exception {
+class cannot_configure_while_open_exception final : public hal_exception {
 public:
-    serial_not_exists_exception()
-        : hal_exception(error::serial_not_exists)
+    cannot_configure_while_open_exception()
+        : hal_exception(error::cannot_configure_while_open)
     {};
 
     [[nodiscard]] const char* what() const noexcept override {
-        return "requested serial does not exist";
-    }
-};
-
-class type_unsupported_by_serial_exception final : public hal_exception {
-public:
-    type_unsupported_by_serial_exception()
-        : hal_exception(error::type_unsupported_by_serial)
-    {};
-
-    [[nodiscard]] const char* what() const noexcept override {
-        return "requested type is not supported for requested serial";
-    }
-};
-
-class serial_already_configured_exception final : public hal_exception {
-public:
-    serial_already_configured_exception()
-        : hal_exception(error::serial_already_configured)
-    {};
-
-    [[nodiscard]] const char* what() const noexcept override {
-        return "serial with given ID is already configured and cannot be again";
+        return "cannot configure while handle is open to device";
     }
 };
 
@@ -278,10 +256,10 @@ void result_to_exception(const result<t_>& res) {
     }
 
     switch (res.error()) {
-        case error::port_not_exists:
-            throw port_not_exists_exception();
-        case error::type_unsupported_by_port:
-            throw type_unsupported_by_port_exception();
+        case error::device_not_exists:
+            throw device_not_exists_exception();
+        case error::type_unsupported_by_device:
+            throw type_unsupported_by_device_exception();
         case error::no_more_handles:
             throw no_more_handles_exception();
         case error::handle_allocation_failure:
@@ -312,18 +290,14 @@ void result_to_exception(const result<t_>& res) {
             throw backend_not_configured_exception();
         case error::backend_does_not_support_operation:
             throw backend_does_not_support_operation();
-        case error::port_already_configured:
-            throw port_already_configured_exception();
-        case error::port_not_defined:
-            throw port_not_defined_exception();
-        case error::port_not_open:
-            throw port_not_open_exception();
-        case error::serial_not_exists:
-            throw serial_not_exists_exception();
-        case error::type_unsupported_by_serial:
-            throw type_unsupported_by_serial_exception();
-        case error::serial_already_configured:
-            throw serial_already_configured_exception();
+        case error::device_already_configured:
+            throw device_already_configured_exception();
+        case error::device_not_defined:
+            throw device_not_defined_exception();
+        case error::device_not_open:
+            throw device_not_open_exception();
+        case error::cannot_configure_while_open:
+            throw cannot_configure_while_open_exception();
         default:
             throw hal_exception(res.error());
     }

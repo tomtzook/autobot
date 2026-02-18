@@ -20,30 +20,22 @@ static result<void> verify_valid_params(const handle handle, const value_key key
 }
 
 static result<void> verify_valid_request(const handle_node* node, const value_key key, const data_type type, const bool write) {
-    switch (node->type) {
-        case handle_type::port: {
-            const auto& def = node->src.port.port->values[key];
-            if (!def.supported) {
-                return error_result(error::unsupported_value);
-            }
+    const auto& def = node->device->values[key];
+    if (!def.supported) {
+        return error_result(error::unsupported_value);
+    }
 
-            if ((def.supported_types & node->src.port.type) != node->src.port.type) {
-                return error_result(error::unsupported_value);
-            }
+    if ((def.supported_types & node->type) != node->type) {
+        return error_result(error::unsupported_value);
+    }
 
-            if (def.type != type) {
-                return error_result(error::invalid_data_type_for_value);
-            }
+    if (def.type != type) {
+        return error_result(error::invalid_data_type_for_value);
+    }
 
-            if ((write && def.permission == data_permission::readonly) ||
-                (!write && def.permission == data_permission::writeonly)) {
-                return error_result(error::no_permissions_for_value_access);
-            }
-
-            break;
-        }
-        case handle_type::serial:
-            return error_result(error::unsupported_value);
+    if ((write && def.permission == data_permission::readonly) ||
+        (!write && def.permission == data_permission::writeonly)) {
+        return error_result(error::no_permissions_for_value_access);
     }
 
     return {};
@@ -65,12 +57,7 @@ result<uint32_t> value_read_u32(const handle handle, const value_key key) {
         return error_result(result.error());
     }
 
-    switch (node->type) {
-        case handle_type::port:
-            return backend::port_value_read_u32(*node, key);
-        default:
-            return error_result(error::unsupported_operation_for_type);
-    }
+    return backend::value_read_u32(*node, key);
 }
 
 result<float> value_read_f32(const handle handle, const value_key key) {
@@ -89,12 +76,7 @@ result<float> value_read_f32(const handle handle, const value_key key) {
         return error_result(result.error());
     }
 
-    switch (node->type) {
-        case handle_type::port:
-            return backend::port_value_read_f32(*node, key);
-        default:
-            return error_result(error::unsupported_operation_for_type);
-    }
+    return backend::value_read_f32(*node, key);
 }
 
 result<void> value_write_u32(const handle handle, const value_key key, const uint32_t value) {
@@ -113,12 +95,7 @@ result<void> value_write_u32(const handle handle, const value_key key, const uin
         return error_result(result.error());
     }
 
-    switch (node->type) {
-        case handle_type::port:
-            return backend::port_value_write_u32(*node, key, value);
-        default:
-            return error_result(error::unsupported_operation_for_type);
-    }
+    return backend::value_write_u32(*node, key, value);
 }
 
 result<void> value_write_f32(const handle handle, const value_key key, const float value) {
@@ -137,12 +114,7 @@ result<void> value_write_f32(const handle handle, const value_key key, const flo
         return error_result(result.error());
     }
 
-    switch (node->type) {
-        case handle_type::port:
-            return backend::port_value_write_f32(*node, key, value);
-        default:
-            return error_result(error::unsupported_operation_for_type);
-    }
+    return backend::value_write_f32(*node, key, value);
 }
 
 }

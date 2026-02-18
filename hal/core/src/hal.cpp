@@ -1,18 +1,11 @@
 
-#include "../include/hal_except.h"
+#include "hal_except.h"
 #include "hal.h"
 
 namespace autobot::hal {
 
-static handle try_open_port(const port_id id, const port_type type) {
-    const auto result = open_port(id, type);
-    result_to_exception(result);
-
-    return result.value();
-}
-
-static handle try_open_serial(const serial_id id, const serial_type type) {
-    const auto result = open_serial(id, type);
+static handle try_open(const device_id id, const device_type type) {
+    const auto result = open(id, type);
     result_to_exception(result);
 
     return result.value();
@@ -72,107 +65,75 @@ void base_device::close() {
     }
 }
 
-port::port(const handle handle)
+device::device(const handle handle)
     : base_device(handle)
 {}
 
-port::port(const port_id id, const port_type type)
-    : port(try_open_port(id, type))
+device::device(const device_id id, const device_type type)
+    : device(try_open(id, type))
 {}
 
-uint32_t port::read_config_u32(const config_key key) const {
+uint32_t device::read_config_u32(const config_key key) const {
     const auto result = hal::config_read_u32(underlying_handle(), key);
     result_to_exception(result);
 
     return result.value();
 }
 
-float port::read_config_f32(const config_key key) const {
+float device::read_config_f32(const config_key key) const {
     const auto result = hal::config_read_f32(underlying_handle(), key);
     result_to_exception(result);
 
     return result.value();
 }
 
-void port::write_config_u32(const config_key key, const uint32_t value) {
+void device::write_config_u32(const config_key key, const uint32_t value) {
     const auto result = hal::config_write_u32(underlying_handle(), key, value);
     result_to_exception(result);
 }
 
-void port::write_config_f32(const config_key key, const float value) {
+void device::write_config_f32(const config_key key, const float value) {
     const auto result = hal::config_write_f32(underlying_handle(), key, value);
     result_to_exception(result);
 }
 
-uint32_t port::read_value_u32(const value_key key) const {
+uint32_t device::read_value_u32(const value_key key) const {
     const auto result = hal::value_read_u32(underlying_handle(), key);
     result_to_exception(result);
 
     return result.value();
 }
 
-float port::read_value_f32(const value_key key) const {
+float device::read_value_f32(const value_key key) const {
     const auto result = hal::value_read_f32(underlying_handle(), key);
     result_to_exception(result);
 
     return result.value();
 }
 
-void port::write_value_u32(const value_key key, const uint32_t value) {
+void device::write_value_u32(const value_key key, const uint32_t value) {
     const auto result = hal::value_write_u32(underlying_handle(), key, value);
     result_to_exception(result);
 }
 
-void port::write_value_f32(const value_key key, const float value) {
+void device::write_value_f32(const value_key key, const float value) {
     const auto result = hal::value_write_f32(underlying_handle(), key, value);
     result_to_exception(result);
 }
 
-serial::serial(const handle handle)
-    : base_device(handle)
-{}
-
-serial::serial(const serial_id id, const serial_type type)
-    : serial(try_open_serial(id, type))
-{}
-
-uint32_t serial::read_config_u32(const config_key key) const {
-    const auto result = hal::config_read_u32(underlying_handle(), key);
-    result_to_exception(result);
-
-    return result.value();
-}
-
-float serial::read_config_f32(const config_key key) const {
-    const auto result = hal::config_read_f32(underlying_handle(), key);
-    result_to_exception(result);
-
-    return result.value();
-}
-
-void serial::write_config_u32(const config_key key, const uint32_t value) {
-    const auto result = hal::config_write_u32(underlying_handle(), key, value);
-    result_to_exception(result);
-}
-
-void serial::write_config_f32(const config_key key, const float value) {
-    const auto result = hal::config_write_f32(underlying_handle(), key, value);
-    result_to_exception(result);
-}
-
-size_t serial::read(const std::span<uint8_t> buffer) {
+size_t device::read(const std::span<uint8_t> buffer) {
     const auto result = hal::serial_read(underlying_handle(), buffer);
     result_to_exception(result);
 
     return result.value();
 }
 
-void serial::write(const std::span<const uint8_t> buffer) {
+void device::write(const std::span<const uint8_t> buffer) {
     const auto result = hal::serial_write(underlying_handle(), buffer);
     result_to_exception(result);
 }
 
-size_t serial::transact(const std::span<const uint8_t> write_buffer, const std::span<uint8_t> read_buffer) {
+size_t device::transact(const std::span<const uint8_t> write_buffer, const std::span<uint8_t> read_buffer) {
     const auto result = hal::serial_transact(underlying_handle(), write_buffer, read_buffer);
     result_to_exception(result);
 
@@ -180,11 +141,11 @@ size_t serial::transact(const std::span<const uint8_t> write_buffer, const std::
 }
 
 digital_port::digital_port(const handle handle)
-    : port(handle)
+    : device(handle)
 {}
 
-digital_port::digital_port(const port_id id, const bool output)
-    : port(id, output ? port_type_digital_output : port_type_digital_input)
+digital_port::digital_port(const device_id id, const bool output)
+    : device(id, output ? port_type_digital_output : port_type_digital_input)
 {}
 
 digital_poll_edge digital_port::poll_edge() const {

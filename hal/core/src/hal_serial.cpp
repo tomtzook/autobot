@@ -15,12 +15,7 @@ result<size_t> serial_read(const handle handle, const std::span<uint8_t> buffer)
     }
 
     const auto& node = opt.value();
-    switch (node->type) {
-        case handle_type::serial:
-            return backend::serial_read(*node, buffer);
-        default:
-            return error_result(error::unsupported_operation_for_type);
-    }
+    return backend::serial_read(*node, buffer);
 }
 
 result<void> serial_write(const handle handle, const std::span<const uint8_t> buffer) {
@@ -31,12 +26,7 @@ result<void> serial_write(const handle handle, const std::span<const uint8_t> bu
     }
 
     const auto& node = opt.value();
-    switch (node->type) {
-        case handle_type::serial:
-            return backend::serial_write(*node, buffer);
-        default:
-            return error_result(error::unsupported_operation_for_type);
-    }
+    return backend::serial_write(*node, buffer);
 }
 
 result<size_t> serial_transact(const handle handle, const std::span<const uint8_t> write_buffer, const std::span<uint8_t> read_buffer) {
@@ -47,12 +37,7 @@ result<size_t> serial_transact(const handle handle, const std::span<const uint8_
     }
 
     const auto& node = opt.value();
-    switch (node->type) {
-        case handle_type::serial:
-            return backend::serial_transact(*node, write_buffer, read_buffer);
-        default:
-            return error_result(error::unsupported_operation_for_type);
-    }
+    return backend::serial_transact(*node, write_buffer, read_buffer);
 }
 
 }

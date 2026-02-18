@@ -4,7 +4,6 @@
 #include <mutex>
 
 #include <hal_types.h>
-#include <obsr.h>
 
 namespace autobot::hal::sim {
 
@@ -13,35 +12,21 @@ union value {
     float f32;
 };
 
-struct open_port {
-    port_type type;
-    value configs[max_config_key];
-    value values[max_value_key];
-
-    struct {
-
-    } obsr;
-};
-
 struct port {
-    port_id id;
+    device_id id;
     const char* name;
-    port_type supported_types;
+    device_type supported_types;
 
     bool is_open;
-    open_port open;
+    device_type open_type;
 
-    struct {
-        obsr::object root;
-        obsr::object open_port;
-        obsr::entry id_entry;
-    } obsr;
+    value configs[max_config_key];
+    value values[max_value_key];
 };
 
 struct global_data {
     std::mutex mutex;
-    std::unordered_map<port_id, port> ports;
-    obsr::object root_obsr_object;
+    std::unordered_map<device_id, port> devices;
 };
 
 std::unique_lock<std::mutex> lock_instance();

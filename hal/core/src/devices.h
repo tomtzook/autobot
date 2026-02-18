@@ -1,40 +1,35 @@
 #pragma once
 
-#include <optional>
+#include <obsr.h>
 
 #include "hal_types.h"
 
 namespace autobot::hal {
 
 struct config_def {
+    const char* name;
     bool supported;
-    port_type supported_types;
+    device_type supported_types;
     data_type type;
     data_permission permission;
 };
 
 struct value_def {
+    const char* name;
     bool supported;
-    port_type supported_types;
+    device_type supported_types;
     data_type type;
     data_permission permission;
 };
 
-struct port {
-    port_id id;
+struct device {
+    device_id id;
     const char* name;
-    port_type supported_types;
+    device_type supported_types;
+    obsr::object obsr_object;
 
     config_def configs[max_config_key];
     value_def values[max_value_key];
-};
-
-struct serial {
-    serial_id id;
-    const char* name;
-    serial_type type;
-
-    config_def configs[max_config_key];
 };
 
 }
