@@ -72,6 +72,18 @@ void set_config_f32(const device_id id, const config_key key, const float value)
     it->second.configs[key].f32 = value;
 }
 
+void set_config_callback(const device_id id, const config_key key, callback_config_set&& callback) {
+    const auto lock = lock_instance();
+    auto& data = get_global_data();
+
+    const auto it = data.devices.find(id);
+    if (it == data.devices.end()) {
+        throw device_not_exists_exception();
+    }
+
+    it->second.configs[key].callback = std::move(callback);
+}
+
 void set_value_u32(const device_id id, const value_key key, const uint32_t value) {
     const auto lock = lock_instance();
     auto& data = get_global_data();
@@ -94,6 +106,18 @@ void set_value_f32(const device_id id, const value_key key, const float value) {
     }
 
     it->second.values[key].f32 = value;
+}
+
+void set_value_callback(const device_id id, const value_key key, callback_config_set&& callback) {
+    const auto lock = lock_instance();
+    auto& data = get_global_data();
+
+    const auto it = data.devices.find(id);
+    if (it == data.devices.end()) {
+        throw device_not_exists_exception();
+    }
+
+    it->second.values[key].callback = std::move(callback);
 }
 
 }

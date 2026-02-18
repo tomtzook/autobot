@@ -99,7 +99,13 @@ result<void> config_write_u32(const device_id id, const device_type type, const 
         return error_result(error::device_not_open);
     }
 
-    port.configs[key].u32 = value;
+    auto& def = port.configs[key];
+    def.u32 = value;
+
+    if (def.callback != nullptr) {
+        def.callback(id, key, generic_value{.type = data_type::unsigned_32bit, .u32 = value});
+    }
+
     return {};
 }
 
@@ -117,7 +123,13 @@ result<void> config_write_f32(const device_id id, const device_type type, const 
         return error_result(error::device_not_open);
     }
 
-    port.configs[key].f32 = value;
+    auto& def = port.configs[key];
+    def.f32 = value;
+
+    if (def.callback != nullptr) {
+        def.callback(id, key, generic_value{.type = data_type::floating_32bit, .f32 = value});
+    }
+
     return {};
 }
 
@@ -169,7 +181,13 @@ result<void> value_write_u32(const device_id id, const device_type type, const v
         return error_result(error::device_not_open);
     }
 
-    port.values[key].u32 = value;
+    auto& def = port.values[key];
+    def.u32 = value;
+
+    if (def.callback != nullptr) {
+        def.callback(id, key, generic_value{.type = data_type::unsigned_32bit, .u32 = value});
+    }
+
     return {};
 }
 
@@ -187,7 +205,13 @@ result<void> value_write_f32(const device_id id, const device_type type, const v
         return error_result(error::device_not_open);
     }
 
-    port.values[key].f32 = value;
+    auto& def = port.values[key];
+    def.f32 = value;
+
+    if (def.callback != nullptr) {
+        def.callback(id, key, generic_value{.type = data_type::floating_32bit, .f32 = value});
+    }
+
     return {};
 }
 
