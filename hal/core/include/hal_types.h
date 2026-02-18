@@ -40,7 +40,10 @@ enum class error {
     device_already_configured = 18,
     device_not_defined = 19,
     device_not_open = 20,
-    cannot_configure_while_open = 21
+    cannot_configure_while_open = 21,
+    device_already_open = 22,
+    serial_unsupported = 23,
+    no_permissions_for_serial_access = 24
 };
 
 template<typename t_>
@@ -82,32 +85,48 @@ inline const char* data_permission_str(const data_permission value) {
     }
 }
 
+struct handle_query_result {
+    device_id id;
+    device_type type;
+};
+
+struct device_query_result {
+    device_id id;
+    device_type supported_types;
+
+    handle handle;
+    device_type open_type;
+};
+
 enum : device_type {
-    port_type_digital_input = 1 << 0,
-    port_type_digital_output = 1 << 1,
-    port_type_analog_input = 1 << 2,
-    port_type_analog_output = 1 << 3,
-    port_type_pwm_output = 1 << 4,
-    serial_type_i2c = 1 << 5,
-    serial_type_spi = 1 << 6,
+    type_port_digital_input = 1 << 0,
+    type_port_digital_output = 1 << 1,
+    type_port_analog_input = 1 << 2,
+    type_port_analog_output = 1 << 3,
+    type_port_pwm_output = 1 << 4,
+    type_serial_i2c = 1 << 5,
+    type_serial_spi = 1 << 6,
+    type_serial_can = 1 << 7,
 };
 
 inline const char* port_type_str(const device_type value) {
     switch (value) {
-        case port_type_digital_input:
+        case type_port_digital_input:
             return "digital_input";
-        case port_type_digital_output:
+        case type_port_digital_output:
             return "digital_output";
-        case port_type_analog_input:
+        case type_port_analog_input:
             return "analog_input";
-        case port_type_analog_output:
+        case type_port_analog_output:
             return "analog_output";
-        case port_type_pwm_output:
+        case type_port_pwm_output:
             return "pwm_output";
-        case serial_type_i2c:
+        case type_serial_i2c:
             return "i2c";
-        case serial_type_spi:
+        case type_serial_spi:
             return "spi";
+        case type_serial_can:
+            return "can";
         default:
             return "";
     }

@@ -22,6 +22,7 @@ set(SOURCES
         src/hal_serial.cpp
         src/hal_obsr.h
         src/hal_obsr.cpp
+        src/hal_query.cpp
 )
 
 add_library(autobot_hal STATIC ${SOURCES})

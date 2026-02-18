@@ -34,7 +34,7 @@ result<void> set_config(const device_id id, const config_key key, const char* na
         return error_result(error::device_not_exists);
     }
 
-    if (lookup_handle_to(it->second).has_value()) {
+    if (handles::lookup_handle_to(it->second).has_value()) {
         return error_result(error::cannot_configure_while_open);
     }
 
@@ -60,7 +60,7 @@ result<void> set_value(const device_id id, const value_key key, const char* name
         return error_result(error::device_not_exists);
     }
 
-    if (lookup_handle_to(it->second).has_value()) {
+    if (handles::lookup_handle_to(it->second).has_value()) {
         return error_result(error::cannot_configure_while_open);
     }
 
@@ -73,6 +73,27 @@ result<void> set_value(const device_id id, const value_key key, const char* name
 
     const auto root = obsr::get_child(it->second.obsr_object, "values");
     show_in_obsr(root, value, key);
+
+    return {};
+}
+
+result<void> set_serial(const device_id id, const device_type supported_types, const data_permission permission) {
+    const auto lock = lock_instance();
+
+    auto& data = get_global_data();
+    const auto it = data.devices.find(id);
+    if (it == data.devices.end()) {
+        return error_result(error::device_not_exists);
+    }
+
+    if (handles::lookup_handle_to(it->second).has_value()) {
+        return error_result(error::cannot_configure_while_open);
+    }
+
+    auto& def = it->second.serial;
+    def.supported_types = supported_types;
+    def.permission = permission;
+    def.supported = true;
 
     return {};
 }

@@ -22,14 +22,21 @@ struct value_def {
     data_permission permission;
 };
 
-struct device {
-    device_id id;
-    const char* name;
+struct serial_def {
+    bool supported;
     device_type supported_types;
-    obsr::object obsr_object;
+    data_permission permission;
+};
 
-    config_def configs[max_config_key];
-    value_def values[max_value_key];
+struct device {
+    device_id id = 0;
+    const char* name = "";
+    device_type supported_types = 0;
+    obsr::object obsr_object = obsr::empty_handle;
+
+    config_def configs[max_config_key]{};
+    value_def values[max_value_key]{};
+    serial_def serial{};
 };
 
 }

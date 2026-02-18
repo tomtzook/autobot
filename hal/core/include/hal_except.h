@@ -249,6 +249,39 @@ public:
     }
 };
 
+class device_already_open_exception final : public hal_exception {
+public:
+    device_already_open_exception()
+        : hal_exception(error::device_already_open)
+    {};
+
+    [[nodiscard]] const char* what() const noexcept override {
+        return "requested device by ID is already open and in use";
+    }
+};
+
+class serial_unsupported_exception final : public hal_exception {
+public:
+    serial_unsupported_exception()
+        : hal_exception(error::serial_unsupported)
+    {};
+
+    [[nodiscard]] const char* what() const noexcept override {
+        return "serial communication is unsupported by this device";
+    }
+};
+
+class no_permissions_for_serial_access_exception final : public hal_exception {
+public:
+    no_permissions_for_serial_access_exception()
+        : hal_exception(error::no_permissions_for_serial_access)
+    {};
+
+    [[nodiscard]] const char* what() const noexcept override {
+        return "no permission for required operation with serial";
+    }
+};
+
 template<typename t_>
 void result_to_exception(const result<t_>& res) {
     if (res) {
@@ -298,6 +331,12 @@ void result_to_exception(const result<t_>& res) {
             throw device_not_open_exception();
         case error::cannot_configure_while_open:
             throw cannot_configure_while_open_exception();
+        case error::device_already_open:
+            throw device_already_open_exception();
+        case error::serial_unsupported:
+            throw serial_unsupported_exception();
+        case error::no_permissions_for_serial_access:
+            throw no_permissions_for_serial_access_exception();
         default:
             throw hal_exception(res.error());
     }

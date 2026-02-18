@@ -18,7 +18,7 @@ struct global_data {
     bool backend_initialized = false;
     backend::backend_impl backend;
     obsr::object root_obsr_object;
-    std::unordered_map<handle, handle_node> handles;
+    std::unordered_map<handle, handles::handle_node> handles;
     std::unordered_map<device_id, device> devices;
 };
 

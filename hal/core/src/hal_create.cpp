@@ -36,17 +36,22 @@ result<handle> open(const device_id id, const device_type type) {
         return error_result(error::type_unsupported_by_device);
     }
 
-    const auto allocate_result = allocate_handle();
+    if (const auto opt_handle = handles::lookup_handle_to(*device)) {
+        return error_result(error::device_already_open);
+    }
+
+    const auto allocate_result = handles::allocate_handle();
     if (!allocate_result) {
         return error_result(allocate_result.error());
     }
 
     auto [handle, node] = allocate_result.value();
+    node->handle = handle;
     node->device = device;
     node->type = type;
 
     if (const auto result = backend::init_device(*node); !result) {
-        release_handle(handle);
+        handles::release_handle(handle);
     }
 
     return handle;
@@ -55,7 +60,7 @@ result<handle> open(const device_id id, const device_type type) {
 result<void> close(const handle handle) {
     const auto lock = lock_instance();
 
-    const auto opt = lookup_handle(handle);
+    const auto opt = handles::lookup_handle(handle);
     if (!opt) {
         return error_result(error::no_such_handle);
     }
@@ -65,7 +70,7 @@ result<void> close(const handle handle) {
         // TODO: TRACE!
     }
 
-    release_handle(handle);
+   handles::release_handle(handle);
 
     return {};
 }

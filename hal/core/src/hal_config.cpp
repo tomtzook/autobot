@@ -19,7 +19,7 @@ static result<void> verify_valid_params(const handle handle, const config_key ke
     return {};
 }
 
-static result<void> verify_valid_request(const handle_node* node, const config_key key, const data_type type, const bool write) {
+static result<void> verify_valid_request(const handles::handle_node* node, const config_key key, const data_type type, const bool write) {
     const auto& def = node->device->configs[key];
     if (!def.supported) {
         return error_result(error::unsupported_config);
@@ -47,7 +47,7 @@ result<uint32_t> config_read_u32(const handle handle, const config_key key) {
     }
 
     const auto lock = lock_instance();
-    const auto opt = lookup_handle(handle);
+    const auto opt = handles::lookup_handle(handle);
     if (!opt) {
         return error_result(error::no_such_handle);
     }
@@ -66,7 +66,7 @@ result<float> config_read_f32(const handle handle, const config_key key) {
     }
 
     const auto lock = lock_instance();
-    const auto opt = lookup_handle(handle);
+    const auto opt = handles::lookup_handle(handle);
     if (!opt) {
         return error_result(error::no_such_handle);
     }
@@ -85,7 +85,7 @@ result<void> config_write_u32(const handle handle, const config_key key, const u
     }
 
     const auto lock = lock_instance();
-    const auto opt = lookup_handle(handle);
+    const auto opt = handles::lookup_handle(handle);
     if (!opt) {
         return error_result(error::no_such_handle);
     }
@@ -104,7 +104,7 @@ result<void> config_write_f32(const handle handle, const config_key key, const f
     }
 
     const auto lock = lock_instance();
-    const auto opt = lookup_handle(handle);
+    const auto opt = handles::lookup_handle(handle);
     if (!opt) {
         return error_result(error::no_such_handle);
     }

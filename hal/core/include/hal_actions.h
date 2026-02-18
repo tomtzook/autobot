@@ -12,6 +12,9 @@ result<void> initialize(const backend::backend_impl* impl);
 result<handle> open(device_id id, device_type type);
 result<void> close(handle handle);
 
+result<handle_query_result> query_handle(handle handle);
+result<device_query_result> query_device(device_id id);
+
 result<uint32_t> config_read_u32(handle handle, config_key key);
 result<float> config_read_f32(handle handle, config_key key);
 result<void> config_write_u32(handle handle, config_key key, uint32_t value);

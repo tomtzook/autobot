@@ -5,7 +5,7 @@
 
 #include <ranges>
 
-namespace autobot::hal {
+namespace autobot::hal::handles {
 
 static handle find_free_handle() {
     auto& global_data = get_global_data();

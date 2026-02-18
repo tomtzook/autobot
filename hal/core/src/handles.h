@@ -6,14 +6,15 @@
 #include "hal_types.h"
 #include "devices.h"
 
-namespace autobot::hal {
+namespace autobot::hal::handles {
 
 struct handle_node {
+    handle handle;
     device_type type;
     const device* device;
 };
 
-result<std::pair<handle, handle_node*>>  allocate_handle();
+result<std::pair<handle, handle_node*>> allocate_handle();
 void release_handle(handle handle);
 
 std::optional<handle_node*> lookup_handle(handle handle);

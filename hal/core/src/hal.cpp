@@ -145,7 +145,7 @@ digital_port::digital_port(const handle handle)
 {}
 
 digital_port::digital_port(const device_id id, const bool output)
-    : device(id, output ? port_type_digital_output : port_type_digital_input)
+    : device(id, output ? type_port_digital_output : type_port_digital_input)
 {}
 
 digital_poll_edge digital_port::poll_edge() const {
