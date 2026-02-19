@@ -24,6 +24,8 @@ struct base_device {
 
     [[nodiscard]] bool is_open() const;
     [[nodiscard]] inline handle underlying_handle() const { return m_handle;}
+    [[nodiscard]] device_id id() const;
+    [[nodiscard]] device_type type() const;
 
     void close();
 
@@ -35,6 +37,11 @@ struct device : base_device {
     device() = default;
     explicit device(handle handle);
     device(device_id id, device_type type);
+
+    [[nodiscard]] device_query_result query() const;
+    [[nodiscard]] config_query_result query_config(config_key key) const;
+    [[nodiscard]] value_query_result query_value(value_key key) const;
+    [[nodiscard]] serial_query_result query_serial() const;
 
     [[nodiscard]] uint32_t read_config_u32(config_key key) const;
     [[nodiscard]] float read_config_f32(config_key key) const;

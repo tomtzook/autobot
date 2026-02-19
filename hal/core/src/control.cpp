@@ -21,6 +21,7 @@ result<void> register_new(const device_id id, const char* name, const device_typ
     port.obsr_object = show_in_obsr(data.root_obsr_object, port);
 
     data.devices.emplace(id, port);
+    data.ordered_devices.emplace_back(id);
 
     return {};
 }

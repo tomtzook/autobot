@@ -58,6 +58,28 @@ bool base_device::is_open() const {
     return m_handle != invalid_handle;
 }
 
+device_id base_device::id() const {
+    if (is_open()) {
+        return invalid_handle;
+    }
+
+    const auto result = query_handle(m_handle);
+    result_to_exception(result);
+
+    return result.value().id;
+}
+
+device_type base_device::type() const {
+    if (is_open()) {
+        return 0;
+    }
+
+    const auto result = query_handle(m_handle);
+    result_to_exception(result);
+
+    return result.value().type;
+}
+
 void base_device::close() {
     if (m_handle != invalid_handle) {
         hal::close(m_handle); // NOLINT(*-unused-return-value)
@@ -72,6 +94,34 @@ device::device(const handle handle)
 device::device(const device_id id, const device_type type)
     : device(try_open(id, type))
 {}
+
+device_query_result device::query() const {
+    const auto result = query_device(id());
+    result_to_exception(result);
+
+    return result.value();
+}
+
+config_query_result device::query_config(const config_key key) const {
+    const auto result = query_device_config(id(), key);
+    result_to_exception(result);
+
+    return result.value();
+}
+
+value_query_result device::query_value(const value_key key) const {
+    const auto result = query_device_value(id(), key);
+    result_to_exception(result);
+
+    return result.value();
+}
+
+serial_query_result device::query_serial() const {
+    const auto result = query_device_serial(id());
+    result_to_exception(result);
+
+    return result.value();
+}
 
 uint32_t device::read_config_u32(const config_key key) const {
     const auto result = hal::config_read_u32(underlying_handle(), key);

@@ -30,6 +30,8 @@ result<std::pair<handle, handle_node*>> allocate_handle() {
         return error_result(error::handle_allocation_failure);
     }
 
+    global_data.ordered_handles.emplace_back(new_handle);
+
     return std::pair<handle, handle_node*>{new_handle, &it->second};
 }
 
@@ -38,6 +40,8 @@ void release_handle(const handle handle) {
     if (const auto it = global_data.handles.find(handle); it != global_data.handles.end()) {
         global_data.handles.erase(it);
     }
+
+    global_data.ordered_handles.remove(handle);
 }
 
 std::optional<handle_node*> lookup_handle(const handle handle) {

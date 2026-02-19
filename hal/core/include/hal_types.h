@@ -98,6 +98,36 @@ struct device_query_result {
     device_type open_type;
 };
 
+struct config_query_result {
+    bool supported;
+    device_type supported_types;
+    data_type type;
+    data_permission permission;
+};
+
+struct value_query_result {
+    bool supported;
+    device_type supported_types;
+    data_type type;
+    data_permission permission;
+};
+
+struct serial_query_result {
+    bool supported;
+    device_type supported_types;
+    data_permission permission;
+};
+
+struct handle_iterator_context {
+    bool done;
+    handle handle;
+};
+
+struct device_iterator_context {
+    bool done;
+    device_id id;
+};
+
 enum : device_type {
     type_port_digital_input = 1 << 0,
     type_port_digital_output = 1 << 1,
@@ -129,6 +159,50 @@ inline const char* port_type_str(const device_type value) {
             return "can";
         default:
             return "";
+    }
+}
+
+inline bool is_type_port(const device_type type) {
+    switch (type) {
+        case type_port_digital_input:
+        case type_port_digital_output:
+        case type_port_analog_input:
+        case type_port_analog_output:
+        case type_port_pwm_output:
+            return true;
+        default:
+            return false;
+    }
+}
+
+inline bool is_type_dio(const device_type type) {
+    switch (type) {
+        case type_port_digital_input:
+        case type_port_digital_output:
+            return true;
+        default:
+            return false;
+    }
+}
+
+inline bool is_type_aio(const device_type type) {
+    switch (type) {
+        case type_port_analog_input:
+        case type_port_analog_output:
+            return true;
+        default:
+            return false;
+    }
+}
+
+inline bool is_type_serial(const device_type type) {
+    switch (type) {
+        case type_serial_i2c:
+        case type_serial_spi:
+        case type_serial_can:
+            return true;
+        default:
+            return false;
     }
 }
 
@@ -164,5 +238,34 @@ enum digital_signal_value : uint32_t {
     digital_signal_value_low = 0,
     digital_signal_value_high = 1,
 };
+
+inline bool is_config_supported_by_type(const device_type type, const config_key key) {
+    switch (key) {
+        case config_digital_poll_edge:
+        case config_digital_resistor_mode:
+            return type & (type_port_digital_input | type_port_digital_output);
+        case config_analog_max_value:
+        case config_analog_max_voltage:
+        case config_analog_sample_rate:
+            return type & (type_port_analog_input | type_port_analog_output);
+        case config_pwm_frequency:
+            return type & (type_port_pwm_output);
+        default:
+            return false;
+    }
+}
+
+inline bool is_value_supported_by_type(const device_type type, const config_key key) {
+    switch (key) {
+        case value_digital_io_signal:
+            return type & (type_port_digital_input | type_port_digital_output);
+        case value_analog_io_signal:
+            return type & (type_port_analog_input | type_port_analog_output);
+        case value_pwm_duty_cycle:
+            return type & (type_port_pwm_output);
+        default:
+            return false;
+    }
+}
 
 }

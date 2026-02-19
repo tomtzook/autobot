@@ -2,6 +2,7 @@
 
 #include <mutex>
 #include <unordered_map>
+#include <list>
 #include <obsr.h>
 
 #include "backend/hal_backend.h"
@@ -20,6 +21,8 @@ struct global_data {
     obsr::object root_obsr_object;
     std::unordered_map<handle, handles::handle_node> handles;
     std::unordered_map<device_id, device> devices;
+    std::list<handle> ordered_handles;
+    std::list<device_id> ordered_devices;
 };
 
 std::unique_lock<std::mutex> lock_instance();

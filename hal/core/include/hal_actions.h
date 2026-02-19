@@ -1,6 +1,7 @@
 #pragma once
 
 #include <span>
+#include <memory>
 
 #include "backend/hal_backend.h"
 #include "hal_types.h"
@@ -14,6 +15,14 @@ result<void> close(handle handle);
 
 result<handle_query_result> query_handle(handle handle);
 result<device_query_result> query_device(device_id id);
+result<config_query_result> query_device_config(device_id id, config_key key);
+result<value_query_result> query_device_value(device_id id, value_key key);
+result<serial_query_result> query_device_serial(device_id id);
+
+result<std::unique_ptr<handle_iterator_context>> iterate_handles();
+result<void> iterate_handles_next(const std::unique_ptr<handle_iterator_context>& ptr);
+result<std::unique_ptr<device_iterator_context>> iterate_devices();
+result<void> iterate_devices_next(const std::unique_ptr<device_iterator_context>& ptr);
 
 result<uint32_t> config_read_u32(handle handle, config_key key);
 result<float> config_read_f32(handle handle, config_key key);
