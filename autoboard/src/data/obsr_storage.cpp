@@ -14,7 +14,7 @@ obsr_storage::obsr_storage()
         handle_event(event);
     });
 
-    obsr::start_client("127.0.0.1", 50000);
+    obsr::start_client("127.0.0.1", 50001);
 }
 
 obsr_storage::~obsr_storage() {

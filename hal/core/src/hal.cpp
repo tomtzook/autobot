@@ -87,6 +87,96 @@ void base_device::close() {
     }
 }
 
+handle_iterator::iterator::iterator(std::unique_ptr<handle_iterator_context>& context)
+    : m_context(std::move(context))
+{}
+
+handle_iterator::iterator::pointer handle_iterator::iterator::operator->() const {
+    return &m_context->handle;
+}
+
+handle_iterator::iterator::reference handle_iterator::iterator::operator*() const {
+    return m_context->handle;
+}
+
+bool handle_iterator::iterator::operator==(const iterator& other) const {
+    if ((m_context == nullptr || m_context->done) && (other.m_context == nullptr || other.m_context->done)) {
+        return true;
+    }
+    if (m_context == nullptr || other.m_context == nullptr) {
+        return false;
+    }
+
+    return m_context->handle == other.m_context->handle;
+}
+
+bool handle_iterator::iterator::operator!=(const iterator& other) const {
+    return !operator==(other);
+}
+
+handle_iterator::iterator& handle_iterator::iterator::operator++() {
+    const auto result = iterate_handles_next(m_context);
+    result_to_exception(result);
+
+    return *this;
+}
+
+handle_iterator::iterator handle_iterator::begin() {
+    auto result = iterate_handles();
+    result_to_exception(result);
+
+    return iterator{result.value()};
+}
+
+handle_iterator::iterator handle_iterator::end() {
+    return iterator{};
+}
+
+device_iterator::iterator::iterator(std::unique_ptr<device_iterator_context>& context)
+    : m_context(std::move(context))
+{}
+
+device_iterator::iterator::pointer device_iterator::iterator::operator->() const {
+    return &m_context->id;
+}
+
+device_iterator::iterator::reference device_iterator::iterator::operator*() const {
+    return m_context->id;
+}
+
+bool device_iterator::iterator::operator==(const iterator& other) const {
+    if ((m_context == nullptr || m_context->done) && (other.m_context == nullptr || other.m_context->done)) {
+        return true;
+    }
+    if (m_context == nullptr || other.m_context == nullptr) {
+        return false;
+    }
+
+    return m_context->id == other.m_context->id;
+}
+
+bool device_iterator::iterator::operator!=(const iterator& other) const {
+    return !operator==(other);
+}
+
+device_iterator::iterator& device_iterator::iterator::operator++() {
+    const auto result = iterate_devices_next(m_context);
+    result_to_exception(result);
+
+    return *this;
+}
+
+device_iterator::iterator device_iterator::begin() {
+    auto result = iterate_devices();
+    result_to_exception(result);
+
+    return iterator{result.value()};
+}
+
+device_iterator::iterator device_iterator::end() {
+    return iterator{};
+}
+
 device::device(const handle handle)
     : base_device(handle)
 {}

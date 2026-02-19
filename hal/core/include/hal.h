@@ -33,6 +33,60 @@ private:
     hal::handle m_handle;
 };
 
+struct handle_iterator {
+    struct iterator {
+        using difference_type = ptrdiff_t;
+        using iterator_category = std::forward_iterator_tag;
+        using value_type = handle;
+        using pointer = handle*;
+        using reference = handle&;
+
+        iterator() = default;
+        explicit iterator(std::unique_ptr<handle_iterator_context>& context);
+
+        pointer operator->() const;
+        reference operator*() const;
+
+        bool operator==(const iterator&) const;
+        bool operator!=(const iterator&) const;
+
+        iterator& operator++();
+
+    private:
+        std::unique_ptr<handle_iterator_context> m_context;
+    };
+
+    iterator begin();
+    iterator end();
+};
+
+struct device_iterator {
+    struct iterator {
+        using difference_type = ptrdiff_t;
+        using iterator_category = std::forward_iterator_tag;
+        using value_type = device_id;
+        using pointer = device_id*;
+        using reference = device_id&;
+
+        iterator() = default;
+        explicit iterator(std::unique_ptr<device_iterator_context>& context);
+
+        pointer operator->() const;
+        reference operator*() const;
+
+        bool operator==(const iterator&) const;
+        bool operator!=(const iterator&) const;
+
+        iterator& operator++();
+
+    private:
+        std::unique_ptr<device_iterator_context> m_context;
+    };
+
+    iterator begin();
+    iterator end();
+};
+
 struct device : base_device {
     device() = default;
     explicit device(handle handle);
