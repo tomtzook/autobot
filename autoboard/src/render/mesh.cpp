@@ -51,26 +51,26 @@ mesh cube_mesh(const float length, const float width, const float height) {
     const auto hz = height / 2.0f;
 
     const float positions[] = {
-        // Front face (z = hz)
+        // Front face (z = hz) - Looking from +Z
         -hx, -hy,  hz,   hx, -hy,  hz,   hx,  hy,  hz,  -hx,  hy,  hz,
-        // Back face (z = -hz)
-        -hx, -hy, -hz,  -hx,  hy, -hz,   hx,  hy, -hz,   hx, -hy, -hz,
-        // Top face (y = hy)
-        -hx,  hy, -hz,  -hx,  hy,  hz,   hx,  hy,  hz,   hx,  hy, -hz,
-        // Bottom face (y = -hy)
+        // Back face (z = -hz) - Looking from -Z
+         hx, -hy, -hz,  -hx, -hy, -hz,  -hx,  hy, -hz,   hx,  hy, -hz,
+        // Top face (y = hy) - Looking from +Y
+        -hx,  hy,  hz,   hx,  hy,  hz,   hx,  hy, -hz,  -hx,  hy, -hz,
+        // Bottom face (y = -hy) - Looking from -Y
         -hx, -hy, -hz,   hx, -hy, -hz,   hx, -hy,  hz,  -hx, -hy,  hz,
-        // Right face (x = hx)
-        hx, -hy, -hz,   hx,  hy, -hz,   hx,  hy,  hz,   hx, -hy,  hz,
-        // Left face (x = -hx)
+        // Right face (x = hx) - Looking from +X
+         hx, -hy,  hz,   hx, -hy, -hz,   hx,  hy, -hz,   hx,  hy,  hz,
+        // Left face (x = -hx) - Looking from -X
         -hx, -hy, -hz,  -hx, -hy,  hz,  -hx,  hy,  hz,  -hx,  hy, -hz
     };
 
     constexpr float tex_coords[] = {
         0,0, 1,0, 1,1, 0,1, // Front
-        1,0, 1,1, 0,1, 0,0, // Back
-        0,1, 0,0, 1,0, 1,1, // Top
-        1,1, 0,1, 0,0, 1,0, // Bottom
-        1,0, 1,1, 0,1, 0,0, // Right
+        0,0, 1,0, 1,1, 0,1, // Back
+        0,0, 1,0, 1,1, 0,1, // Top
+        0,0, 1,0, 1,1, 0,1, // Bottom
+        0,0, 1,0, 1,1, 0,1, // Right
         0,0, 1,0, 1,1, 0,1  // Left
     };
 
@@ -80,7 +80,7 @@ mesh cube_mesh(const float length, const float width, const float height) {
         0, 1, 0,   0, 1, 0,   0, 1, 0,   0, 1, 0,  // Top
         0,-1, 0,   0,-1, 0,   0,-1, 0,   0,-1, 0,  // Bottom
         1, 0, 0,   1, 0, 0,   1, 0, 0,   1, 0, 0,  // Right
-        -1, 0, 0,  -1, 0, 0,  -1, 0, 0,  -1, 0, 0   // Left
+       -1, 0, 0,  -1, 0, 0,  -1, 0, 0,  -1, 0, 0   // Left
     };
 
     unsigned int indices[36];

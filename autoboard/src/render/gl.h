@@ -165,7 +165,7 @@ buffer<t_>& buffer<t_>::operator=(buffer&& other) noexcept {
 template<typename t_>
 void buffer<t_>::set(const target target, const usage usage, const std::span<const t_> data) {
     glBindBuffer(static_cast<GLenum>(target), m_id);
-    glBufferData(static_cast<GLenum>(target), static_cast<GLsizeiptr>(data.size()), data.data(), static_cast<GLenum>(usage));
+    glBufferData(static_cast<GLenum>(target), static_cast<GLsizeiptr>(data.size_bytes()), data.data(), static_cast<GLenum>(usage));
     glBindBuffer(static_cast<GLenum>(target), 0);
 }
 

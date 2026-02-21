@@ -15,7 +15,7 @@ class container {
 public:
     container();
 
-    void update();
+    void update(GLFWwindow* window);
     void draw_ui();
     void render3d();
 
