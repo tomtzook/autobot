@@ -9,24 +9,12 @@
 #include <imgui_internal.h>
 #include <GLFW/glfw3.h>
 #include <implot.h>
-#include <glm/glm.hpp>
-#include <glm/gtc/quaternion.hpp>
 
-#include "render/render.h"
-#include "render/camera.h"
 #include "container.h"
 
 
 static void glfw_error_callback(const int error, const char* description) {
     fprintf(stderr, "GLFW Error %d: %s\n", error, description);
-}
-
-static glm::mat4 transformation(const glm::vec3& position, const glm::quat& rotation, const glm::vec3& scale) {
-    auto model = glm::mat4(1.0f);
-    model = glm::translate(model, position);
-    model = model * glm::mat4_cast(rotation);
-    model = glm::scale(model, scale);
-    return model;
 }
 
 int main() {
@@ -66,12 +54,6 @@ int main() {
     constexpr auto clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
     ui::container container;
-    ui::render::renderer renderer3d;
-    ui::render::camera camera(glm::radians(45.0f), 1280.0f / 720.0f, 0.01f, 100.0f, 1.0f, 0.5f);
-
-    auto cube = ui::render::cube_mesh(1, 1, 1);
-    cube.color(gl::color(255, 0, 0, 255));
-    const auto transformation_cube = transformation(glm::vec3(0.1f, 0.0f, -3.0f), glm::quat(glm::vec3(0.0f, 0.0f, 0.0f)), glm::vec3(1.0f));
 
     auto last_update_time = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());;
     while (!glfwWindowShouldClose(window)) {
@@ -93,7 +75,7 @@ int main() {
             container.update();
         }
 
-        container.draw();
+        container.draw_ui();
 
         // render
         ImGui::Render();
@@ -104,11 +86,7 @@ int main() {
         glClearColor(clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w, clear_color.w);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        {
-            auto renderer = renderer3d.start(camera.projection(), camera.view());
-            renderer.render(transformation_cube, cube);
-        }
-
+        container.render3d();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
         glfwSwapBuffers(window);

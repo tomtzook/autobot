@@ -56,6 +56,9 @@ add_executable(autoboard src/main.cpp
         src/render/render.h
         src/render/camera.h
         src/render/camera.cpp
+        src/render/transform.h
+        src/render/body.h
+        src/render/body.cpp
 )
 target_include_directories(autoboard PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 target_link_libraries(autoboard imgui implot Threads::Threads fmt::fmt looper::looper obsr::obsr OpenGL::GL glfw glm::glm)

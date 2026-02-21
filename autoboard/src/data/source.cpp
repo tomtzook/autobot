@@ -20,18 +20,45 @@ uint64_t data_source::get_id() const {
 
 std::string_view data_source::get_name() const {
     return std::visit([](const auto& t)->std::string_view {
+        if (!t) {
+            return "";
+        }
         return t->get_name();
     }, m_data);
 }
 
 bool data_source::has_new_data() const {
     return std::visit([](const auto& t)->bool {
+        if (!t) {
+            return false;
+        }
         return t->has_new_data();
+    }, m_data);
+}
+
+bool data_source::has_new_data_self() const {
+    return std::visit([](const auto& t)->bool {
+        if (!t) {
+            return false;
+        }
+        return t->has_new_data_self();
+    }, m_data);
+}
+
+bool data_source::has_children() const {
+    return std::visit([](const auto& t)->bool {
+        if (!t) {
+            return false;
+        }
+        return t->has_children();
     }, m_data);
 }
 
 scheme::type data_source::get_scheme() const {
     return std::visit([](const auto& t)->auto {
+        if (!t) {
+            return scheme::type::unknown;
+        }
         return t->get_scheme();
     }, m_data);
 }

@@ -4,6 +4,23 @@
 
 namespace autobot::dashboard {
 
+template<typename t_, typename map_t_>
+t_& create_shape(map_t_& map, bind& dashboard_bind, const std::string_view name) {
+    if (const auto it = map.find(name); it != map.end()) {
+        throw std::runtime_error("name already used");
+    }
+
+    auto [it, added] = map.emplace(name, t_());
+    if (!added) {
+        throw std::runtime_error("failed to add item to map");
+    }
+
+    auto& child = std::get<t_>(it->second);
+    dashboard_bind.add_child(name, child);
+
+    return child;
+}
+
 canvas_line::canvas_line()
     : m_x(0)
     , m_y(0)
@@ -124,23 +141,6 @@ void canvas_rect::bind_dashboard(bind&& bind) {
     m_dashboard_bind.add_readonly("length", m_length);
     m_dashboard_bind.add_readonly("width", m_width);
     m_dashboard_bind.add_readonly("color", m_background);
-}
-
-template<typename t_, typename map_t_>
-t_& create_shape(map_t_& map, bind& dashboard_bind, const std::string_view name) {
-    if (const auto it = map.find(name); it != map.end()) {
-        throw std::runtime_error("name already used");
-    }
-
-    auto [it, added] = map.emplace(name, t_());
-    if (!added) {
-        throw std::runtime_error("failed to add item to map");
-    }
-
-    auto& child = std::get<t_>(it->second);
-    dashboard_bind.add_child(name, child);
-
-    return child;
 }
 
 canvas_circle::canvas_circle()

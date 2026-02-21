@@ -1,6 +1,8 @@
 
 #include "registry.h"
 
+#include <ranges>
+
 namespace data {
 
 registry::registry()
@@ -23,6 +25,12 @@ bool registry::has_children(const uint64_t id) const {
     }
 
     return false;
+}
+
+void registry::foreach(std::function<void(data_source&)>&& callback) {
+    for (auto& source: m_data | std::views::values) {
+        callback(source.source);
+    }
 }
 
 void registry::foreach_child(const uint64_t id, std::function<void(data_source&)>&& callback) {

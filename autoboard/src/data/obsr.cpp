@@ -11,6 +11,8 @@ static std::map<std::string, scheme::type, std::less<>> create_str_to_scheme_map
     map.emplace("canvas_rect", scheme::type::canvas_rect);
     map.emplace("canvas_circle", scheme::type::canvas_circle);
     map.emplace("canvas_group", scheme::type::canvas_group);
+    map.emplace("d3_body", scheme::type::d3_body);
+    map.emplace("d3_box", scheme::type::d3_box);
 
     return map;
 }
@@ -87,6 +89,14 @@ bool obsr_entry::has_new_data() const {
     return m_has_new_data;
 }
 
+bool obsr_entry::has_new_data_self() const {
+    return m_has_new_data;
+}
+
+bool obsr_entry::has_children() const {
+    return false;
+}
+
 const obsr::value& obsr_entry::get_value() const {
     return m_value;
 }
@@ -154,6 +164,14 @@ bool obsr_object::has_new_data() const {
     return false;
 }
 
+bool obsr_object::has_new_data_self() const {
+    return m_has_new_data;
+}
+
+bool obsr_object::has_children() const {
+    return true;
+}
+
 scheme::type obsr_object::get_scheme() const {
     return m_scheme;
 }
@@ -208,6 +226,40 @@ scheme::canvas_group obsr_object::read<scheme::canvas_group>() {
     const auto y = get_entry_value<float>("y", 0);
 
     return {x, y};
+}
+
+template<>
+scheme::d3_body obsr_object::read<scheme::d3_body>() {
+    assert(m_scheme == scheme::type::d3_body);
+    m_has_new_data = false;
+
+    const auto x = get_entry_value<float>("x", 0);
+    const auto y = get_entry_value<float>("y", 0);
+    const auto z = get_entry_value<float>("z", 0);
+    const auto pitch = get_entry_value<float>("pitch", 0);
+    const auto yaw = get_entry_value<float>("roll", 0);
+    const auto roll = get_entry_value<float>("yaw", 0);
+
+    return {x, y, z, pitch, yaw, roll};
+}
+
+template<>
+scheme::d3_box obsr_object::read<scheme::d3_box>() {
+    assert(m_scheme == scheme::type::d3_box);
+    m_has_new_data = false;
+
+    const auto x = get_entry_value<float>("x", 0);
+    const auto y = get_entry_value<float>("y", 0);
+    const auto z = get_entry_value<float>("z", 0);
+    const auto pitch = get_entry_value<float>("pitch", 0);
+    const auto yaw = get_entry_value<float>("roll", 0);
+    const auto roll = get_entry_value<float>("yaw", 0);
+    const auto length = get_entry_value<float>("length", 0);
+    const auto width = get_entry_value<float>("width", 0);
+    const auto height = get_entry_value<float>("height", 0);
+    const auto color = static_cast<uint32_t>(get_entry_value<int32_t>("color", 0));
+
+    return {x, y, z, pitch, yaw, roll, length, width, height, color};
 }
 
 std::optional<obsr_object*> obsr_object::get_child(const std::string_view name) {

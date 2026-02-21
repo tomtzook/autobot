@@ -26,7 +26,21 @@ shader::shader(const shader_type type)
 {}
 
 shader::~shader() {
-    glDeleteShader(m_id);
+    if (m_id != 0) {
+        glDeleteShader(m_id);
+        m_id = 0;
+    }
+}
+
+shader::shader(shader&& other) noexcept
+    : m_id(other.m_id) {
+    other.m_id = 0;
+}
+
+shader& shader::operator=(shader&& other) noexcept {
+    m_id = other.m_id;
+    other.m_id = 0;
+    return *this;
 }
 
 int32_t shader::get_param(const shader_param param) const {
@@ -81,7 +95,21 @@ program::program()
 {}
 
 program::~program() {
-    glDeleteProgram(m_id);
+    if (m_id != 0) {
+        glDeleteProgram(m_id);
+        m_id = 0;
+    }
+}
+
+program::program(program&& other) noexcept
+    : m_id(other.m_id) {
+    other.m_id = 0;
+}
+
+program& program::operator=(program&& other) noexcept {
+    m_id = other.m_id;
+    other.m_id = 0;
+    return *this;
 }
 
 int32_t program::get_param(const program_param param) const {

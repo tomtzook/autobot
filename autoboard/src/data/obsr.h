@@ -29,6 +29,8 @@ public:
     [[nodiscard]] obsr::entry get_handle() const;
     [[nodiscard]] std::string_view get_name() const;
     [[nodiscard]] bool has_new_data() const;
+    [[nodiscard]] bool has_new_data_self() const;
+    [[nodiscard]] bool has_children() const;
     [[nodiscard]] const obsr::value& get_value() const;
     [[nodiscard]] scheme::type get_scheme() const;
 
@@ -61,6 +63,8 @@ public:
     [[nodiscard]] obsr::object get_handle() const;
     [[nodiscard]] std::string_view get_name() const;
     [[nodiscard]] bool has_new_data() const;
+    [[nodiscard]] bool has_new_data_self() const;
+    [[nodiscard]] bool has_children() const;
     [[nodiscard]] scheme::type get_scheme() const;
 
     template<typename t_>

@@ -18,6 +18,7 @@ public:
     [[nodiscard]] std::optional<data_source> get(uint64_t id) const;
     [[nodiscard]] bool has_children(uint64_t id) const;
 
+    void foreach(std::function<void(data_source&)>&& callback);
     void foreach_child(uint64_t id, std::function<void(data_source&)>&& callback);
 
     void create(obsr_entry_ptr ptr, uint64_t parent_id = 0);

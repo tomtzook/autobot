@@ -49,7 +49,7 @@ gl::uniform& shader::get_uniform(const std::string_view& name) {
     }
 
     auto uniform = m_program.find_uniform(name);
-    auto [it, _] = m_uniforms.emplace(name, uniform);
+    auto [it, _] = m_uniforms.emplace(name, std::move(uniform));
 
     return it->second;
 }

@@ -19,6 +19,9 @@ set(SOURCES
         src/dashboard/toggle.cpp
         include/dashboard/canvas.h
         src/dashboard/canvas.cpp
+        include/dashboard/world.h
+        include/dashboard/color.h
+        src/dashboard/world.cpp
 )
 
 add_library(autobot STATIC ${SOURCES})

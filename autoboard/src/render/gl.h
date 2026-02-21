@@ -48,6 +48,11 @@ struct buffer {
     buffer();
     ~buffer();
 
+    buffer(buffer&) = delete;
+    buffer(buffer&&) noexcept;
+    buffer& operator=(buffer&) = delete;
+    buffer& operator=(buffer&&) noexcept;
+
     void set(target target, usage usage, std::span<const t_> data);
 
     void map_to_shader(target target, size_t index, size_t size) const;
@@ -74,6 +79,11 @@ struct shader {
     explicit shader(shader_type type);
     ~shader();
 
+    shader(shader&) = delete;
+    shader(shader&&) noexcept;
+    shader& operator=(shader&) = delete;
+    shader& operator=(shader&&) noexcept;
+
     [[nodiscard]] int32_t get_param(shader_param param) const;
 
     void source(std::string_view data);
@@ -88,6 +98,11 @@ private:
 struct uniform {
     explicit uniform(GLint location);
 
+    uniform(uniform&) = delete;
+    uniform(uniform&&) noexcept = default;
+    uniform& operator=(uniform&) = delete;
+    uniform& operator=(uniform&&) noexcept = default;
+
     void set(int i);
     void set(std::span<const float> data);
     void set(const glm::mat4& matrix);
@@ -99,6 +114,11 @@ private:
 struct program {
     program();
     ~program();
+
+    program(program&) = delete;
+    program(program&&) noexcept;
+    program& operator=(program&) = delete;
+    program& operator=(program&&) noexcept;
 
     [[nodiscard]] int32_t get_param(program_param param) const;
     [[nodiscard]] uniform find_uniform(std::string_view name) const;
@@ -123,7 +143,23 @@ buffer<t_>::buffer()
 
 template<typename t_>
 buffer<t_>::~buffer() {
-    glDeleteBuffers(1, &m_id);
+    if (m_id != 0) {
+        glDeleteBuffers(1, &m_id);
+        m_id = 0;
+    }
+}
+
+template<typename t_>
+buffer<t_>::buffer(buffer&& other) noexcept
+    : m_id(other.m_id) {
+    other.m_id = 0;
+}
+
+template<typename t_>
+buffer<t_>& buffer<t_>::operator=(buffer&& other) noexcept {
+    m_id = other.m_id;
+    other.m_id = 0;
+    return *this;
 }
 
 template<typename t_>

@@ -14,6 +14,8 @@ enum class type {
     canvas_rect,
     canvas_circle,
     canvas_group,
+    d3_body,
+    d3_box
 };
 
 struct number {
@@ -46,6 +48,28 @@ struct canvas_circle {
 struct canvas_group {
     float x;
     float y;
+};
+
+struct d3_body {
+    float x;
+    float y;
+    float z;
+    float pitch;
+    float yaw;
+    float roll;
+};
+
+struct d3_box {
+    float x;
+    float y;
+    float z;
+    float pitch;
+    float yaw;
+    float roll;
+    float length;
+    float width;
+    float height;
+    uint32_t color;
 };
 
 }

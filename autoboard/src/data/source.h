@@ -18,6 +18,8 @@ public:
     [[nodiscard]] uint64_t get_id() const;
     [[nodiscard]] std::string_view get_name() const;
     [[nodiscard]] bool has_new_data() const;
+    [[nodiscard]] bool has_new_data_self() const;
+    [[nodiscard]] bool has_children() const;
     [[nodiscard]] scheme::type get_scheme() const;
 
     template<typename t_>
