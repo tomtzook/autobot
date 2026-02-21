@@ -5,6 +5,8 @@
 
 namespace data {
 
+// todo: locks!
+
 registry::registry()
     : m_next_id(0)
     , m_data()

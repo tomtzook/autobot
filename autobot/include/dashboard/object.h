@@ -5,6 +5,7 @@
 #include <map>
 #include <vector>
 #include <optional>
+#include <memory>
 
 #include <obsr.h>
 
@@ -61,7 +62,7 @@ private:
 class entry_ref {
 public:
     entry_ref();
-    entry_ref(registry* registry, entry* entry);
+    entry_ref(registry* registry, std::shared_ptr<entry> entry);
     ~entry_ref();
 
     entry_ref(const entry_ref&) = delete;
@@ -85,7 +86,7 @@ public:
 
 private:
     registry* m_registry;
-    entry* m_entry;
+    std::shared_ptr<entry> m_entry;
 };
 
 class registry {
@@ -107,10 +108,10 @@ private:
     void add(obsr::object object, t_& t);
 
     bind create_bind(obsr::object object);
-    void remove_ref(const entry& entry);
+    void remove_ref(const std::shared_ptr<entry>& entry);
 
     obsr::object m_root;
-    std::vector<entry> m_entries;
+    std::vector<std::shared_ptr<entry>> m_entries;
 
     friend class entry_ref;
 };

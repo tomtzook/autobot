@@ -5,6 +5,8 @@
 
 namespace data {
 
+// todo: locks!
+
 static std::map<std::string, scheme::type, std::less<>> create_str_to_scheme_map() {
     std::map<std::string, scheme::type, std::less<>> map;
     map.emplace("canvas_line", scheme::type::canvas_line);

@@ -93,4 +93,66 @@ mesh cube_mesh(const float length, const float width, const float height) {
     return mesh{positions, tex_coords, normals, indices};
 }
 
+mesh sphere_mesh(const float radius) {
+    constexpr auto sectors = 8;
+    constexpr auto stacks = 8;
+    constexpr auto vertices_count = (sectors + 1) * (stacks + 1);
+    constexpr auto indices_count = 336;
+
+    float positions[vertices_count * 3];
+    float normals[vertices_count * 3];
+    float tex_coords[vertices_count * 2];
+    unsigned int indices[indices_count];
+
+    int positions_idx = 0;
+    int normals_idx = 0;
+    int tex_coords_idx = 0;
+
+    for (int i = 0; i <= stacks; ++i) {
+        const auto stack_angle = M_PIf / 2 - static_cast<float>(i) * (M_PIf / stacks);
+        const auto xy = radius * cosf(stack_angle);
+        const auto z = radius * sinf(stack_angle);
+
+        for (int j = 0; j <= sectors; ++j) {
+            const auto sector_angle = static_cast<float>(j) * (2 * M_PIf / sectors);
+            const auto x = xy * cosf(sector_angle);
+            const auto y = xy * sinf(sector_angle);
+
+            // 1. Positions
+            positions[positions_idx++] = x;
+            positions[positions_idx++] = y;
+            positions[positions_idx++] = z;
+
+            // 2. Normals
+            normals[normals_idx++] = x / radius;
+            normals[normals_idx++] = y / radius;
+            normals[normals_idx++] = z / radius;
+
+            // 3. UVs
+            tex_coords[tex_coords_idx++] = static_cast<float>(j) / sectors;
+            tex_coords[tex_coords_idx++] = static_cast<float>(i) / stacks;
+        }
+    }
+
+    int indices_idx = 0;
+    for (int i = 0; i < stacks; ++i) {
+        int k1 = i * (sectors + 1);
+        int k2 = k1 + sectors + 1;
+        for (int j = 0; j < sectors; ++j, ++k1, ++k2) {
+            if (i != 0) {
+                indices[indices_idx++] = k1;
+                indices[indices_idx++] = k2;
+                indices[indices_idx++] = k1 + 1;
+            }
+            if (i != (stacks - 1)) {
+                indices[indices_idx++] = k1 + 1;
+                indices[indices_idx++] = k2;
+                indices[indices_idx++] = k2 + 1;
+            }
+        }
+    }
+
+    return mesh{positions, tex_coords, normals, indices};
+}
+
 }

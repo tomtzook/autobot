@@ -26,5 +26,6 @@ private:
 };
 
 mesh cube_mesh(float length, float width, float height);
+mesh sphere_mesh(float radius);
 
 }

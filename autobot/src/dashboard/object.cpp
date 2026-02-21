@@ -86,20 +86,20 @@ entry_ref::entry_ref()
     , m_entry(nullptr)
 {}
 
-entry_ref::entry_ref(registry* registry, entry* entry)
+entry_ref::entry_ref(registry* registry, std::shared_ptr<entry> entry)
     : m_registry(registry)
-    , m_entry(entry)
+    , m_entry(std::move(entry))
 {}
 
 entry_ref::~entry_ref() {
     if (m_entry != nullptr) {
-        m_registry->remove_ref(*m_entry);
+        m_registry->remove_ref(m_entry);
     }
 }
 
 entry_ref::entry_ref(entry_ref&& other) noexcept
     : m_registry(other.m_registry)
-      , m_entry(other.m_entry) {
+    , m_entry(std::move(other.m_entry)) {
     other.m_entry = nullptr;
 }
 
@@ -238,19 +238,22 @@ registry::registry()
 
 void registry::update() {
     for (auto& entry : m_entries) {
-        entry.refresh();
+        entry->refresh();
     }
 }
 
 bind registry::create_bind(const obsr::object object) {
-    auto& entry = m_entries.emplace_back(object);
-    entry_ref ref(this, &entry);
+    auto& entry = m_entries.emplace_back(std::make_shared<class entry>(object));
+    entry_ref ref(this, entry);
     return bind{std::move(ref)};
 }
 
-void registry::remove_ref(const entry& entry) {
-    if (const auto it = std::ranges::find(m_entries, entry); it != m_entries.end()) {
-        it->delete_object();
+void registry::remove_ref(const std::shared_ptr<entry>& entry) {
+    const auto it = std::ranges::find_if(m_entries, [&entry](const auto& value)->bool {
+        return entry.get() == value.get();
+    });
+    if (it != m_entries.end()) {
+        it->get()->delete_object();
         m_entries.erase(it);
     }
 }
