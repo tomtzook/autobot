@@ -7,7 +7,7 @@
 
 #include "data/obsr.h"
 
-namespace data {
+namespace autobot::board::data {
 
 class obsr_storage {
 public:

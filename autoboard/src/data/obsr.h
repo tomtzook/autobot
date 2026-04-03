@@ -6,7 +6,7 @@
 
 #include "scheme.h"
 
-namespace data {
+namespace autobot::board::data {
 
 class obsr_entry;
 using obsr_entry_ptr = std::shared_ptr<obsr_entry>;

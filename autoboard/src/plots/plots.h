@@ -5,7 +5,7 @@
 #include "data/source.h"
 #include "plots/xy_plot.h"
 
-namespace ui::plots {
+namespace autobot::board::ui::plots {
 
 class time_plot {
 public:

@@ -5,7 +5,16 @@
 
 #include "data/registry.h"
 
-namespace ui::render {
+namespace autobot::board::ui::render {
+
+static gl::color parse_color(const uint32_t raw) {
+    const auto red = raw & 0xff;
+    const auto green = (raw >> 8) & 0xff;
+    const auto blue = (raw >> 16) & 0xff;
+    const auto alpha = (raw >> 24) & 0xff;
+    return gl::color(red, green, blue, alpha);
+}
+
 static ligament_type create_ligament_by_type(const data::data_source& source) {
     switch (source.get_scheme()) {
         case data::scheme::type::d3_box:
@@ -42,6 +51,7 @@ ligament_box::ligament_box(data::data_source source)
     , m_length()
     , m_width()
     , m_height()
+    , m_color()
 {}
 
 void ligament_box::update() {
@@ -55,12 +65,13 @@ void ligament_box::update() {
     m_base.offset.z = data.z;
     m_base.rotation = glm::vec3(data.pitch, data.yaw, data.roll);
 
-    if (m_length != data.length || m_width != data.width || m_height != data.height) {
+    if (m_length != data.length || m_width != data.width || m_height != data.height || m_color != data.color) {
         m_length = data.length;
         m_width = data.width;
         m_height = data.height;
-        m_base.mesh = cube_mesh(m_length, m_width, m_height); // todo: color
-        m_base.mesh->color(gl::color(255, 0, 0, 255));
+        m_color = data.color;
+        m_base.mesh = cube_mesh(m_length, m_width, m_height);
+        m_base.mesh->color(parse_color(m_color));
     }
 }
 

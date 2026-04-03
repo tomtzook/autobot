@@ -3,7 +3,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
 
-namespace ui::render {
+namespace autobot::board::ui::render {
 
 struct transform {
     glm::vec3 position;

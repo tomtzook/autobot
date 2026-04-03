@@ -4,7 +4,7 @@
 #include <glm/ext/matrix_clip_space.hpp>
 #include <glm/ext/matrix_transform.hpp>
 
-namespace ui::render {
+namespace autobot::board::ui::render {
 
 camera::camera(const glm::mat4& projection)
     : m_projection(projection)

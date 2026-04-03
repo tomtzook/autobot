@@ -23,7 +23,7 @@ add_library(implot STATIC
 target_include_directories(implot PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/libs/implot/)
 target_link_libraries(implot imgui)
 
-add_executable(autoboard src/main.cpp
+add_library(autoboard STATIC
         src/plots/xy_plot.h
         src/plots/xy_plot.cpp
         src/plots/timed_plot_updater.h
@@ -31,7 +31,6 @@ add_executable(autoboard src/main.cpp
         src/plots/plots.cpp
         src/container.h
         src/container.cpp
-        src/widgets/widgets.h
         src/widgets/canvas.h
         src/data/source.h
         src/data/source.cpp
@@ -59,6 +58,13 @@ add_executable(autoboard src/main.cpp
         src/render/transform.h
         src/render/body.h
         src/render/body.cpp
+        src/window.h
+        src/window.cpp
+        include/autoboard.h
+        src/autoboard.cpp
 )
-target_include_directories(autoboard PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
-target_link_libraries(autoboard imgui implot Threads::Threads fmt::fmt looper::looper obsr::obsr OpenGL::GL glfw glm::glm)
+target_include_directories(autoboard PUBLIC include PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+target_link_libraries(autoboard PUBLIC obsr::obsr PRIVATE imgui implot OpenGL::GL glfw glm::glm)
+
+add_executable(autoboard_main main_src/main.cpp)
+target_link_libraries(autoboard_main autoboard)

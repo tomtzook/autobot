@@ -5,7 +5,7 @@
 #include <string>
 #include <implot.h>
 
-namespace ui::plots {
+namespace autobot::board::ui::plots {
 
 struct xy_plot_data {
     xy_plot_data();

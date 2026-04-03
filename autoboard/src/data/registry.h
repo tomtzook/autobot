@@ -4,7 +4,7 @@
 
 #include "source.h"
 
-namespace data {
+namespace autobot::board::data {
 
 class registry {
 public:

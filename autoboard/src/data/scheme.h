@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-namespace data::scheme {
+namespace autobot::board::data::scheme {
 
 enum class type {
     unknown,

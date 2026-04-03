@@ -7,7 +7,7 @@
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 
-namespace gl {
+namespace autobot::board::gl {
 
 enum class target {
     array_buffer = GL_ARRAY_BUFFER,

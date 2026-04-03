@@ -1,7 +1,7 @@
 
 #include "container.h"
 
-namespace ui {
+namespace autobot::board::ui {
 
 container::container()
     : m_obsr_storage()
@@ -66,12 +66,13 @@ void container::draw_ui() {
 }
 
 void container::render3d() {
+    auto renderer = m_renderer3d.start(m_camera.projection(), m_camera.view());
+
     /*auto cube = ui::render::cube_mesh(1, 1, 1);
     cube.color(gl::color(255, 0, 0, 255));
-    const auto transformation_cube = transformation(glm::vec3(0.1f, 0.0f, -3.0f), glm::quat(glm::vec3(0.0f, 0.0f, 0.0f)), glm::vec3(1.0f));
+    const auto transformation_cube = render::transformation(glm::vec3(0.1f, 0.0f, -3.0f), glm::quat(glm::vec3(0.0f, 0.0f, 0.0f)), glm::vec3(1.0f));
     renderer.render(transformation_cube, cube);*/
 
-    auto renderer = m_renderer3d.start(m_camera.projection(), m_camera.view());
     m_world3d.render(renderer);
 }
 

@@ -3,7 +3,7 @@
 
 #include "obsr.h"
 
-namespace ui::widgets {
+namespace autobot::board::ui::widgets {
 
 static const char* get_type_name(const obsr::value_type type) {
     switch (type) {

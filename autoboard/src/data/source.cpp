@@ -2,7 +2,7 @@
 #include "scheme.h"
 #include "source.h"
 
-namespace data {
+namespace autobot::board::data {
 
 data_source::data_source(const uint64_t id, obsr_entry_ptr data)
     : m_id(id)

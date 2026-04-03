@@ -7,7 +7,7 @@
 #include "render/transform.h"
 #include "render/render.h"
 
-namespace ui::render {
+namespace autobot::board::ui::render {
 
 struct ligament_base {
     std::optional<mesh> mesh;
@@ -34,6 +34,7 @@ private:
     float m_length;
     float m_width;
     float m_height;
+    uint32_t m_color;
 };
 
 class ligament_wrapper {

@@ -4,7 +4,7 @@
 #include "data/registry.h"
 #include "plots.h"
 
-namespace ui::plots {
+namespace autobot::board::ui::plots {
 
 time_plot::time_plot(const std::string_view label)
     : m_plot(label)

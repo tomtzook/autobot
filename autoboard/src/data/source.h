@@ -3,7 +3,7 @@
 #include "scheme.h"
 #include "obsr.h"
 
-namespace data {
+namespace autobot::board::data {
 
 class data_source {
 public:

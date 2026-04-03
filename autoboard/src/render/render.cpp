@@ -1,7 +1,7 @@
 
 #include "render.h"
 
-namespace ui::render {
+namespace autobot::board::ui::render {
 
 static constexpr auto object_shader_vertex = R"(
     #version 330

@@ -31,7 +31,7 @@ target_include_directories(autobot
         $<INSTALL_INTERFACE:include/autobot>
         PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/src)
-target_link_libraries(autobot Eigen3::Eigen Threads::Threads fmt::fmt looper::looper obsr::obsr)
+target_link_libraries(autobot PUBLIC obsr::obsr Eigen3::Eigen PRIVATE looper::looper)
 
 install(TARGETS autobot EXPORT autobot
         LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"

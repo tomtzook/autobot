@@ -6,7 +6,7 @@
 
 #include <ranges>
 
-namespace ui::widgets {
+namespace autobot::board::ui::widgets {
 
 // from pixels
 static constexpr auto scale_factor = 10.0f;
@@ -214,6 +214,11 @@ void canvas::draw() const {
     auto* draw_list = ImGui::GetWindowDrawList();
 
     const auto size = ImGui::GetContentRegionAvail();
+    if (size.x == 0 || size.y == 0) {
+        // not ready yet to display
+        return;
+    }
+
     const auto canvas_min = pos;
     const auto canvas_max = ImVec2(pos[0] + size[0], pos[1] + size[1]);
 

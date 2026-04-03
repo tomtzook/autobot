@@ -4,7 +4,7 @@
 
 #include "render/gl.h"
 
-namespace ui::render {
+namespace autobot::board::ui::render {
 
 class camera {
 public:

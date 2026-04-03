@@ -9,7 +9,7 @@
 #include "render/camera.h"
 #include "render/body.h"
 
-namespace ui {
+namespace autobot::board::ui {
 
 class container {
 public:

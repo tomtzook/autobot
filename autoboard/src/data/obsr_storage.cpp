@@ -2,7 +2,7 @@
 #include "registry.h"
 #include "obsr_storage.h"
 
-namespace data {
+namespace autobot::board::data {
 
 obsr_storage::obsr_storage()
     : m_mutex()
@@ -14,7 +14,24 @@ obsr_storage::obsr_storage()
         handle_event(event);
     });
 
-    obsr::start_client("127.0.0.1", 50001);
+    obsr::foreach_entry([this](const auto& entry)->void {
+        const auto path = obsr::get_path_for_entry(entry);
+        iterate_path(path, [](obsr_object* obj)->void {
+            obj->update();
+        });
+
+        if (const auto it = m_entries.find(path); it != m_entries.end()) {
+            const auto value = obsr::get_value(entry);
+            it->second->update(value);
+
+            iterate_path(path, [](obsr_object* obj)->void {
+                obj->update();
+            });
+        }
+    });
+
+    //obsr::start_client("127.0.0.1", 50001);
+    //obsr::start_diagnostics(18802);
 }
 
 obsr_storage::~obsr_storage() {

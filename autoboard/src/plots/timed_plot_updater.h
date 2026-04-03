@@ -2,7 +2,7 @@
 
 #include <chrono>
 
-namespace ui::plots {
+namespace autobot::board::ui::plots {
 
 template<typename t_>
 concept updatable = requires(t_ t, float f1_x) {

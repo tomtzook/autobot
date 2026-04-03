@@ -3,7 +3,7 @@
 
 #include <stdexcept>
 
-namespace ui::render {
+namespace autobot::board::ui::render {
 
 shader::shader(const std::string_view vertex_data, const std::string_view fragment_data)
     : m_vertex_shader(gl::shader_type::vertex)

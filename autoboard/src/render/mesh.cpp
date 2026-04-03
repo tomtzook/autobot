@@ -4,7 +4,7 @@
 
 #include "mesh.h"
 
-namespace ui::render {
+namespace autobot::board::ui::render {
 
 mesh::mesh(
     const std::span<const float> positions,

@@ -6,7 +6,7 @@
 
 #include "data/source.h"
 
-namespace ui::widgets {
+namespace autobot::board::ui::widgets {
 
 class canvas_line;
 class canvas_rect;

@@ -2,7 +2,7 @@
 
 #include "data/obsr_storage.h"
 
-namespace ui::widgets {
+namespace autobot::board::ui::widgets {
 
 class obsr_tree {
 public:

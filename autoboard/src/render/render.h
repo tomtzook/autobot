@@ -4,7 +4,7 @@
 #include "render/shader.h"
 #include "render/mesh.h"
 
-namespace ui::render {
+namespace autobot::board::ui::render {
 
 class renderer {
 public:

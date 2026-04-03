@@ -3,7 +3,7 @@
 #include "render/gl.h"
 #include "render/shader.h"
 
-namespace ui::render {
+namespace autobot::board::ui::render {
 
 class mesh {
 public:

@@ -3,7 +3,7 @@
 
 #include <ranges>
 
-namespace ui::plots {
+namespace autobot::board::ui::plots {
 
 xy_plot_data::xy_plot_data()
     : x_data{}
