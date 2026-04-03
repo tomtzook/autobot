@@ -52,7 +52,7 @@ result<void> set_config(const device_id id, const config_key key, const char* na
     return {};
 }
 
-result<void> set_value(const device_id id, const value_key key, const char* name, const device_type supported_types, const data_type type, const data_permission permission) {
+result<void> set_value(const device_id id, const value_key key, const char* name, const device_type supported_types, const data_type type, const data_permission permission, const value_capabilities capabilities) {
     const auto lock = lock_instance();
 
     auto& data = get_global_data();
@@ -70,6 +70,7 @@ result<void> set_value(const device_id id, const value_key key, const char* name
     value.supported_types = supported_types;
     value.type = type;
     value.permission = permission;
+    value.capabilities = capabilities;
     value.supported = true;
 
     const auto root = obsr::get_child(it->second.obsr_object, "values");

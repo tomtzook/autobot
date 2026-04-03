@@ -8,7 +8,7 @@ template<typename t>
 std::string mask_str(const t mask, const char*(*bit_to_str)(t)) {
     std::stringstream ss;
     bool has_one = false;
-    for (int i = 0; i < sizeof(mask); i++) {
+    for (int i = 0; i < sizeof(mask) * 8; i++) {
         if (const auto bit = mask & (1 << i)) {
             const auto str = bit_to_str(bit);
 

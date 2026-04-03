@@ -104,6 +104,13 @@ result<void> value_write_f32(const handles::handle_node& node, const value_key k
     return backend->value_write_f32(node.device->id, node.type, key, value);
 }
 
+result<void> value_pulse_u32(const handles::handle_node& node, const value_key key, const uint32_t pulse_value, const uint32_t done_value, const std::chrono::microseconds duration) {
+    const auto* backend = get_backend();
+    verify_func_exists(backend, value_pulse_u32);
+
+    return backend->value_pulse_u32(node.device->id, node.type, key, done_value, pulse_value, duration);
+}
+
 result<size_t> serial_read(const handles::handle_node& node, const std::span<uint8_t> buffer) {
     const auto* backend = get_backend();
     verify_func_exists(backend, serial_read);

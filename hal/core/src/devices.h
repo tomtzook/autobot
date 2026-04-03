@@ -20,6 +20,7 @@ struct value_def {
     device_type supported_types;
     data_type type;
     data_permission permission;
+    value_capabilities capabilities;
 };
 
 struct serial_def {

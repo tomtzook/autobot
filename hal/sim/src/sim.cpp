@@ -34,8 +34,8 @@ void define_config(const device_id id, const config_key key, const char* name,
 }
 
 void define_value(const device_id id, const value_key key, const char* name,
-    const device_type supported_types, const data_type type, const data_permission permission) {
-    if (const auto result = control::set_value(id, key, name, supported_types, type, permission);
+    const device_type supported_types, const data_type type, const data_permission permission, const value_capabilities capabilities) {
+    if (const auto result = control::set_value(id, key, name, supported_types, type, permission, capabilities);
         !result) {
         result_to_exception(result);
     }
@@ -108,7 +108,7 @@ void set_value_f32(const device_id id, const value_key key, const float value) {
     it->second.values[key].f32 = value;
 }
 
-void set_value_callback(const device_id id, const value_key key, callback_config_set&& callback) {
+void set_value_callback(const device_id id, const value_key key, callback_value_set&& callback) {
     const auto lock = lock_instance();
     auto& data = get_global_data();
 

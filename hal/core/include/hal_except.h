@@ -282,6 +282,17 @@ public:
     }
 };
 
+class cannot_pulse_value_exception final : public hal_exception {
+public:
+    cannot_pulse_value_exception()
+        : hal_exception(error::cannot_pulse_value)
+    {};
+
+    [[nodiscard]] const char* what() const noexcept override {
+        return "value cannot be pulsed";
+    }
+};
+
 template<typename t_>
 void result_to_exception(const result<t_>& res) {
     if (res) {
@@ -337,6 +348,8 @@ void result_to_exception(const result<t_>& res) {
             throw serial_unsupported_exception();
         case error::no_permissions_for_serial_access:
             throw no_permissions_for_serial_access_exception();
+        case error::cannot_pulse_value:
+            throw cannot_pulse_value_exception();
         default:
             throw hal_exception(res.error());
     }

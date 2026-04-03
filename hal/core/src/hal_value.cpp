@@ -41,6 +41,15 @@ static result<void> verify_valid_request(const handles::handle_node* node, const
     return {};
 }
 
+static result<void> verify_valid_pulse_supported(const handles::handle_node* node, const value_key key) {
+    const auto& def = node->device->values[key];
+    if ((def.capabilities & value_capabilities::pulse) == value_capabilities::pulse) {
+        return error_result(error::cannot_pulse_value);
+    }
+
+    return {};
+}
+
 result<uint32_t> value_read_u32(const handle handle, const value_key key) {
     if (const auto result = verify_valid_params(handle, key); !result) {
         return error_result(result.error());
@@ -115,6 +124,28 @@ result<void> value_write_f32(const handle handle, const value_key key, const flo
     }
 
     return backend::value_write_f32(*node, key, value);
+}
+
+result<void> value_pulse_u32(const handle handle, const value_key key, const uint32_t pulse_value, const uint32_t done_value, const std::chrono::microseconds duration) {
+    if (const auto result = verify_valid_params(handle, key); !result) {
+        return error_result(result.error());
+    }
+
+    const auto lock = lock_instance();
+    const auto opt = handles::lookup_handle(handle);
+    if (!opt) {
+        return error_result(error::no_such_handle);
+    }
+
+    const auto& node = opt.value();
+    if (const auto result = verify_valid_request(node, key, data_type::unsigned_32bit, true); !result) {
+        return error_result(result.error());
+    }
+    if (const auto result = verify_valid_pulse_supported(node, key); !result) {
+        return error_result(result.error());
+    }
+
+    return backend::value_pulse_u32(*node, key, pulse_value, done_value, duration);
 }
 
 }

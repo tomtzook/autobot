@@ -33,6 +33,7 @@ result<uint32_t> value_read_u32(handle handle, value_key key);
 result<float> value_read_f32(handle handle, value_key key);
 result<void> value_write_u32(handle handle, value_key key, uint32_t value);
 result<void> value_write_f32(handle handle, value_key key, float value);
+result<void> value_pulse_u32(handle handle, value_key key, uint32_t pulse_value, uint32_t done_value, std::chrono::microseconds duration);
 
 result<size_t> serial_read(handle handle, std::span<uint8_t> buffer);
 result<void> serial_write(handle handle, std::span<const uint8_t> buffer);

@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <limits>
 #include <expected>
+#include <chrono>
 
 namespace autobot::hal {
 
@@ -43,7 +44,8 @@ enum class error {
     cannot_configure_while_open = 21,
     device_already_open = 22,
     serial_unsupported = 23,
-    no_permissions_for_serial_access = 24
+    no_permissions_for_serial_access = 24,
+    cannot_pulse_value = 25
 };
 
 template<typename t_>
@@ -83,6 +85,27 @@ inline const char* data_permission_str(const data_permission value) {
         default:
             return "";
     }
+}
+
+enum class value_capabilities : uint16_t {
+    none = 0,
+    pulse = 1
+};
+
+constexpr value_capabilities operator|(const value_capabilities lhs, const value_capabilities rhs) {
+    return static_cast<value_capabilities>(static_cast<uint16_t>(lhs) | static_cast<uint16_t>(rhs));
+}
+
+constexpr value_capabilities operator&(const value_capabilities lhs, const value_capabilities rhs) {
+    return static_cast<value_capabilities>(static_cast<uint16_t>(lhs) & static_cast<uint16_t>(rhs));
+}
+
+constexpr bool operator==(const value_capabilities lhs, const value_capabilities rhs) {
+    return static_cast<uint16_t>(lhs) == static_cast<uint16_t>(rhs);
+}
+
+constexpr bool operator!=(const value_capabilities lhs, const value_capabilities rhs) {
+    return static_cast<uint16_t>(lhs) != static_cast<uint16_t>(rhs);
 }
 
 struct handle_query_result {

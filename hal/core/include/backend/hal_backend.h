@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <span>
+#include <chrono>
 
 #include <hal_types.h>
 
@@ -23,6 +24,7 @@ struct backend_impl {
     result<float> (*value_read_f32)(device_id, device_type, value_key);
     result<void> (*value_write_u32)(device_id, device_type, value_key, uint32_t);
     result<void> (*value_write_f32)(device_id, device_type, value_key, float);
+    result<void> (*value_pulse_u32)(device_id, device_type, value_key, uint32_t, uint32_t, std::chrono::microseconds);
 
     result<size_t> (*serial_read)(device_id, device_type, std::span<uint8_t>);
     result<void> (*serial_write)(device_id, device_type, std::span<const uint8_t>);

@@ -106,6 +106,7 @@ struct device : base_device {
     [[nodiscard]] float read_value_f32(value_key key) const;
     void write_value_u32(value_key key, uint32_t value);
     void write_value_f32(value_key key, float value);
+    void pulse_value_u32(value_key key, uint32_t pulse_value, uint32_t done_value, std::chrono::microseconds duration);
 
     size_t read(std::span<uint8_t> buffer);
     void write(std::span<const uint8_t> buffer);
@@ -124,6 +125,7 @@ struct digital_port final : device {
 
     [[nodiscard]] digital_signal_value read() const;
     void write(digital_signal_value value);
+    void pulse(std::chrono::microseconds duration);
 };
 
 }

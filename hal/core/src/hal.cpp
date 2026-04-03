@@ -261,6 +261,11 @@ void device::write_value_f32(const value_key key, const float value) {
     result_to_exception(result);
 }
 
+void device::pulse_value_u32(const value_key key, const uint32_t pulse_value, const uint32_t done_value, const std::chrono::microseconds duration) {
+    const auto result = hal::value_pulse_u32(underlying_handle(), key, pulse_value, done_value, duration);
+    result_to_exception(result);
+}
+
 size_t device::read(const std::span<uint8_t> buffer) {
     const auto result = hal::serial_read(underlying_handle(), buffer);
     result_to_exception(result);
@@ -310,6 +315,10 @@ digital_signal_value digital_port::read() const {
 
 void digital_port::write(const digital_signal_value value) {
     write_value_u32(value_digital_io_signal, value);
+}
+
+void digital_port::pulse(const std::chrono::microseconds duration) {
+    pulse_value_u32(value_digital_io_signal, digital_signal_value_high, digital_signal_value_low, duration);
 }
 
 }
