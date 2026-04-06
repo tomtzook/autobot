@@ -9,9 +9,9 @@ template<typename t_>
 concept numeric = std::integral<t_> || std::floating_point<t_>;
 
 using integer_type = int;
-using floating_type = float;
+using floating_type = double;
 
-constexpr floating_type pi = M_PIf;
+constexpr floating_type pi = M_PI;
 
 template<size_t rows, size_t cols>
 using matrixd = Eigen::Matrix<integer_type, rows, cols>;

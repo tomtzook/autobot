@@ -90,7 +90,6 @@ struct device_iterator {
 struct device : base_device {
     device() = default;
     explicit device(handle handle);
-    device(device_id id, device_type type);
 
     [[nodiscard]] device_query_result query() const;
     [[nodiscard]] config_query_result query_config(config_key key) const;
@@ -113,10 +112,21 @@ struct device : base_device {
     size_t transact(std::span<const uint8_t> write_buffer, std::span<uint8_t> read_buffer);
 };
 
-struct digital_port final : device {
-    digital_port() = default;
-    explicit digital_port(handle handle);
-    digital_port(device_id id, bool output);
+struct digital_input final : device {
+    digital_input() = default;
+    explicit digital_input(handle handle);
+
+    [[nodiscard]] digital_poll_edge poll_edge() const;
+    void poll_edge(digital_poll_edge value);
+    [[nodiscard]] digital_resistor_mode resistor_mode() const;
+    void resistor_mode(digital_resistor_mode value);
+
+    [[nodiscard]] digital_signal_value read() const;
+};
+
+struct digital_output final : device {
+    digital_output() = default;
+    explicit digital_output(handle handle);
 
     [[nodiscard]] digital_poll_edge poll_edge() const;
     void poll_edge(digital_poll_edge value);
@@ -127,6 +137,27 @@ struct digital_port final : device {
     void write(digital_signal_value value);
     void pulse(std::chrono::microseconds duration);
 };
+
+handle open_device(device_id id, device_type type);
+
+template<device_type type_>
+auto open_device(const device_id id) {
+    const auto handle = open_device(id, type_);
+    switch (type_) {
+        case type_port_digital_input:
+            return digital_input(handle);
+        case type_port_digital_output:
+            return digital_output(handle);
+        case type_port_analog_input:
+        case type_port_analog_output:
+        case type_port_pwm_output:
+        case type_serial_i2c:
+        case type_serial_spi:
+        case type_serial_can:
+        default:
+            return device(handle);
+    }
+}
 
 }
 

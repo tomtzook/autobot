@@ -7,12 +7,12 @@
 
 namespace autobot::board::ui::render {
 
-static gl::color parse_color(const uint32_t raw) {
+static glui::gl::color parse_color(const uint32_t raw) {
     const auto red = raw & 0xff;
     const auto green = (raw >> 8) & 0xff;
     const auto blue = (raw >> 16) & 0xff;
     const auto alpha = (raw >> 24) & 0xff;
-    return gl::color(red, green, blue, alpha);
+    return glui::gl::color(red, green, blue, alpha);
 }
 
 static ligament_type create_ligament_by_type(const data::data_source& source) {
@@ -33,13 +33,13 @@ static bool should_reload_ligament(const ligament_type& current_ligament, const 
     }
 }
 
-void ligament_base::render(const transform& root, renderer::context& renderer) const {
+void ligament_base::render(const glui::transform& root, glui::renderer::context& renderer) const {
     if (!mesh) {
         return;
     }
 
-    const auto root_mat = transformation(root.position, root.rotation, glm::vec3(1.0f));
-    const auto off_mat = transformation(offset, rotation, glm::vec3(1.0f));
+    const auto root_mat = glui::transformation(root.position, root.rotation, glm::vec3(1.0f));
+    const auto off_mat = glui::transformation(offset, rotation, glm::vec3(1.0f));
     const auto abs_mat = root_mat * off_mat;
 
     renderer.render(abs_mat, mesh.value());
@@ -70,12 +70,12 @@ void ligament_box::update() {
         m_width = data.width;
         m_height = data.height;
         m_color = data.color;
-        m_base.mesh = cube_mesh(m_length, m_width, m_height);
+        m_base.mesh = glui::cube_mesh(m_length, m_width, m_height);
         m_base.mesh->color(parse_color(m_color));
     }
 }
 
-void ligament_box::render(const transform& root, renderer::context& renderer) const {
+void ligament_box::render(const glui::transform& root, glui::renderer::context& renderer) const {
     m_base.render(root, renderer);
 }
 
@@ -103,7 +103,7 @@ void ligament_wrapper::update() {
     }, shape);
 }
 
-void ligament_wrapper::render(const transform& root, renderer::context& renderer) const {
+void ligament_wrapper::render(const glui::transform& root, glui::renderer::context& renderer) const {
     if (!m_ligament) {
         return;
     }
@@ -151,7 +151,7 @@ void body::update() {
     }
 }
 
-void body::render(renderer::context& renderer) const {
+void body::render(glui::renderer::context& renderer) const {
     for (const auto& ligament : m_ligaments | std::views::values) {
         ligament.render(m_transform, renderer);
     }
@@ -176,7 +176,7 @@ void world3d::update() {
     });
 }
 
-void world3d::render(renderer::context& renderer) const {
+void world3d::render(glui::renderer::context& renderer) const {
     for (const auto& body: m_bodies | std::views::values) {
         body.render(renderer);
     }

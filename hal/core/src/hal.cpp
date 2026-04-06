@@ -4,13 +4,6 @@
 
 namespace autobot::hal {
 
-static handle try_open(const device_id id, const device_type type) {
-    const auto result = open(id, type);
-    result_to_exception(result);
-
-    return result.value();
-}
-
 void initialize(std::function<void(backend::backend_impl*)>&& initializer) {
     backend::backend_impl impl{};
     initializer(&impl);
@@ -181,10 +174,6 @@ device::device(const handle handle)
     : base_device(handle)
 {}
 
-device::device(const device_id id, const device_type type)
-    : device(try_open(id, type))
-{}
-
 device_query_result device::query() const {
     const auto result = query_device(id());
     result_to_exception(result);
@@ -285,40 +274,67 @@ size_t device::transact(const std::span<const uint8_t> write_buffer, const std::
     return result.value();
 }
 
-digital_port::digital_port(const handle handle)
+digital_input::digital_input(const handle handle)
     : device(handle)
 {}
 
-digital_port::digital_port(const device_id id, const bool output)
-    : device(id, output ? type_port_digital_output : type_port_digital_input)
-{}
-
-digital_poll_edge digital_port::poll_edge() const {
+digital_poll_edge digital_input::poll_edge() const {
     return static_cast<digital_poll_edge>(read_config_u32(config_digital_poll_edge));
 }
 
-void digital_port::poll_edge(const digital_poll_edge value) {
+void digital_input::poll_edge(const digital_poll_edge value) {
     write_config_u32(config_digital_poll_edge, value);
 }
 
-digital_resistor_mode digital_port::resistor_mode() const {
+digital_resistor_mode digital_input::resistor_mode() const {
     return static_cast<digital_resistor_mode>(read_config_u32(config_digital_resistor_mode));
 }
 
-void digital_port::resistor_mode(const digital_resistor_mode value) {
+void digital_input::resistor_mode(const digital_resistor_mode value) {
     write_config_u32(config_digital_resistor_mode, value);
 }
 
-digital_signal_value digital_port::read() const {
+digital_signal_value digital_input::read() const {
     return static_cast<digital_signal_value>(read_value_u32(value_digital_io_signal));
 }
 
-void digital_port::write(const digital_signal_value value) {
+digital_output::digital_output(const handle handle)
+    : device(handle)
+{}
+
+digital_poll_edge digital_output::poll_edge() const {
+    return static_cast<digital_poll_edge>(read_config_u32(config_digital_poll_edge));
+}
+
+void digital_output::poll_edge(const digital_poll_edge value) {
+    write_config_u32(config_digital_poll_edge, value);
+}
+
+digital_resistor_mode digital_output::resistor_mode() const {
+    return static_cast<digital_resistor_mode>(read_config_u32(config_digital_resistor_mode));
+}
+
+void digital_output::resistor_mode(const digital_resistor_mode value) {
+    write_config_u32(config_digital_resistor_mode, value);
+}
+
+digital_signal_value digital_output::read() const {
+    return static_cast<digital_signal_value>(read_value_u32(value_digital_io_signal));
+}
+
+void digital_output::write(const digital_signal_value value) {
     write_value_u32(value_digital_io_signal, value);
 }
 
-void digital_port::pulse(const std::chrono::microseconds duration) {
+void digital_output::pulse(const std::chrono::microseconds duration) {
     pulse_value_u32(value_digital_io_signal, digital_signal_value_high, digital_signal_value_low, duration);
+}
+
+handle open_device(const device_id id, const device_type type) {
+    const auto result = open(id, type);
+    result_to_exception(result);
+
+    return result.value();
 }
 
 }

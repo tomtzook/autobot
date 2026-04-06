@@ -13,6 +13,12 @@ struct generic_value {
         uint32_t u32;
         float f32;
     };
+
+    bool is_pulse;
+    struct {
+        uint32_t done_value;
+        std::chrono::microseconds duration;
+    } pulse_info;
 };
 
 using callback_config_set = std::function<void(device_id, config_key, const generic_value&)>;

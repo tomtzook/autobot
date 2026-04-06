@@ -1,6 +1,3 @@
-find_package(OpenGL REQUIRED)
-find_package(glfw3 REQUIRED)
-find_package(glm REQUIRED)
 
 add_library(imgui STATIC
         # Main Imgui files
@@ -44,18 +41,6 @@ add_library(autoboard STATIC
         src/widgets/obsr.h
         src/widgets/obsr.cpp
         src/widgets/canvas.cpp
-        src/render/mesh.h
-        src/render/mesh.cpp
-        src/glad/glad.c
-        src/render/gl.h
-        src/render/gl.cpp
-        src/render/shader.h
-        src/render/shader.cpp
-        src/render/render.cpp
-        src/render/render.h
-        src/render/camera.h
-        src/render/camera.cpp
-        src/render/transform.h
         src/render/body.h
         src/render/body.cpp
         src/window.h
@@ -64,7 +49,7 @@ add_library(autoboard STATIC
         src/autoboard.cpp
 )
 target_include_directories(autoboard PUBLIC include PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
-target_link_libraries(autoboard PUBLIC obsr::obsr PRIVATE imgui implot OpenGL::GL glfw glm::glm)
+target_link_libraries(autoboard PUBLIC obsr::obsr PRIVATE glui imgui implot OpenGL::GL glfw glm::glm)
 
 add_executable(autoboard_main main_src/main.cpp)
 target_link_libraries(autoboard_main autoboard)

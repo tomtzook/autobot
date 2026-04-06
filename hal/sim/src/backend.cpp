@@ -215,6 +215,36 @@ result<void> value_write_f32(const device_id id, const device_type type, const v
     return {};
 }
 
+result<void> value_pulse_u32(const device_id id, const device_type type, const value_key key, const uint32_t pulse_value, const uint32_t done_value, const std::chrono::microseconds duration) {
+    const auto lock = lock_instance();
+
+    auto& data = get_global_data();
+    const auto it = data.devices.find(id);
+    if (it == data.devices.end()) {
+        return error_result(error::device_not_defined);
+    }
+
+    auto& port = it->second;
+    if (!port.is_open) {
+        return error_result(error::device_not_open);
+    }
+
+    auto& def = port.values[key];
+    def.u32 = pulse_value;
+
+    // todo: simulate pulse
+
+    if (def.callback != nullptr) {
+        generic_value generic_value{.type = data_type::unsigned_32bit, .u32 = pulse_value};
+        generic_value.is_pulse = true;
+        generic_value.pulse_info.done_value = done_value;
+        generic_value.pulse_info.duration = duration;
+        def.callback(id, key, generic_value);
+    }
+
+    return {};
+}
+
 }
 
 void initialize(backend::backend_impl* impl) {
@@ -232,6 +262,7 @@ void initialize(backend::backend_impl* impl) {
     impl->value_read_f32 = value_read_f32;
     impl->value_write_u32 = value_write_u32;
     impl->value_write_f32 = value_write_f32;
+    impl->value_pulse_u32 = value_pulse_u32;
 }
 
 }

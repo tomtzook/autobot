@@ -2,11 +2,12 @@
 
 #include <vector>
 
+#include <glui/render.h>
+#include <glui/camera.h>
+
 #include "widgets/obsr.h"
 #include "plots/plots.h"
 #include "widgets/canvas.h"
-#include "render/render.h"
-#include "render/camera.h"
 #include "render/body.h"
 
 namespace autobot::board::ui {
@@ -27,8 +28,8 @@ private:
 
     std::vector<plots::plot_window> m_plot_windows;
     std::vector<widgets::canvas_window> m_canvas_windows;
-    render::renderer m_renderer3d;
-    render::camera m_camera;
+    glui::renderer m_renderer3d;
+    glui::camera m_camera;
     render::world3d m_world3d;
 };
 
