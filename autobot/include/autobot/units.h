@@ -3,7 +3,7 @@
 #include <ratio>
 #include <chrono>
 
-#include "math/common.h"
+#include "autobot/math/common.h"
 
 namespace autobot::units {
 namespace detail {

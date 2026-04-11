@@ -1,6 +1,6 @@
 #pragma once
 
-#include "dashboard/object.h"
+#include "autobot/dashboard/object.h"
 
 namespace autobot::dashboard {
 

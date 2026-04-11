@@ -1,8 +1,8 @@
 #pragma once
 
-#include "math/plant/dc_motor.h"
-#include "units.h"
-#include "dashboard/object.h"
+#include "autobot/math/plant/dc_motor.h"
+#include "autobot/units.h"
+#include "autobot/dashboard/object.h"
 
 namespace autobot::sim {
 

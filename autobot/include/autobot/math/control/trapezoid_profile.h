@@ -1,7 +1,7 @@
 #pragma once
 
-#include "units.h"
-#include "dashboard/object.h"
+#include "autobot/units.h"
+#include "autobot/dashboard/object.h"
 
 namespace autobot::math {
 

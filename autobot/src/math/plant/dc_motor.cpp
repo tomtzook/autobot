@@ -1,5 +1,5 @@
 
-#include "math/plant/dc_motor.h"
+#include "autobot/math/plant/dc_motor.h"
 
 namespace autobot::math {
 

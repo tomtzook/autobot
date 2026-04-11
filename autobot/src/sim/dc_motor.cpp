@@ -1,5 +1,5 @@
 
-#include "sim/dc_motor.h"
+#include "autobot/sim/dc_motor.h"
 
 
 namespace autobot::sim {

@@ -1,9 +1,9 @@
 #pragma once
 
-#include "math/common.h"
-#include "units.h"
-#include "math/ops.h"
-#include "dashboard/object.h"
+#include "autobot/math/common.h"
+#include "autobot/units.h"
+#include "autobot/math/ops.h"
+#include "autobot/dashboard/object.h"
 
 namespace autobot::math {
 

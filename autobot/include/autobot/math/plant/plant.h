@@ -1,6 +1,6 @@
 #pragma once
 
-#include "math/common.h"
+#include "autobot/math/common.h"
 
 namespace autobot::math {
 

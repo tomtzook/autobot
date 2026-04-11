@@ -13,7 +13,7 @@
 
 #include <hal.h>
 #include <hal_sim.h>
-#include <units.h>
+#include <autobot/units.h>
 
 #include "dynamics/body.h"
 #include "transform.h"
@@ -124,12 +124,12 @@ int main() {
     window.on_update([&window, &ultrasonic_ligament, &hcsr04_sim, &echo_reader]()->void {
         if (window.get_key(GLFW_KEY_T) == GLFW_PRESS) {
             auto pos = ultrasonic_ligament.get_joint().get_position();
-            pos += 1.0_rad;
+            pos += 1.0_deg;
             ultrasonic_ligament.get_joint().set_position(pos);
         }
         if (window.get_key(GLFW_KEY_R) == GLFW_PRESS) {
             auto pos = ultrasonic_ligament.get_joint().get_position();
-            pos -= 1.0_rad;
+            pos -= 1.0_deg;
             ultrasonic_ligament.get_joint().set_position(pos);
         }
         if (window.get_key(GLFW_KEY_Y) == GLFW_PRESS) {

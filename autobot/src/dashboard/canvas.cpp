@@ -1,5 +1,5 @@
 
-#include "dashboard/canvas.h"
+#include "autobot/dashboard/canvas.h"
 
 
 namespace autobot::dashboard {

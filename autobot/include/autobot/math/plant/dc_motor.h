@@ -1,8 +1,8 @@
 #pragma once
 
-#include "math/common.h"
-#include "math/plant/plant.h"
-#include "units.h"
+#include "autobot/math/common.h"
+#include "autobot/math/plant/plant.h"
+#include "autobot/units.h"
 
 namespace autobot::math {
 

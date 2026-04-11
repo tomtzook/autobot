@@ -3,9 +3,9 @@
 #include <variant>
 #include <map>
 
-#include "units.h"
-#include "dashboard/object.h"
-#include "dashboard/color.h"
+#include "autobot/units.h"
+#include "autobot/dashboard/object.h"
+#include "autobot/dashboard/color.h"
 
 namespace autobot::dashboard {
 

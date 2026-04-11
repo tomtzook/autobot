@@ -1,8 +1,8 @@
 #pragma once
 
-#include "units.h"
-#include "math/ops.h"
-#include "dashboard/object.h"
+#include "autobot/units.h"
+#include "autobot/math/ops.h"
+#include "autobot/dashboard/object.h"
 
 namespace autobot::math {
 
