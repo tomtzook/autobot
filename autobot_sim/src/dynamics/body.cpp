@@ -17,11 +17,11 @@ Eigen::Vector<dst_t_, size_> unwrap(const Eigen::Vector<src_t_, size_>& data) {
     return result;
 }
 
-transformable<weld_joint>::transformable(const ligament_holder<weld_joint> ligament)
+transformable<weld_joint>::transformable(const engine::ligament_holder<weld_joint> ligament)
     : world_transformable<weld_joint>(ligament)
 {}
 
-transformable<revolute_joint>::transformable(const ligament_holder<revolute_joint> ligament)
+transformable<revolute_joint>::transformable(const engine::ligament_holder<revolute_joint> ligament)
     : world_transformable<revolute_joint>(ligament)
 {}
 
@@ -57,7 +57,7 @@ void transformable<prismatic_joint>::set_position(const units::meters value) {
     joint_info::set_pos(m_ligament.joint, value.value());
 }
 
-transformable<prismatic_joint>::transformable(const ligament_holder<prismatic_joint> ligament)
+transformable<prismatic_joint>::transformable(const engine::ligament_holder<prismatic_joint> ligament)
     : world_transformable<prismatic_joint>(ligament)
 {}
 
@@ -77,7 +77,7 @@ void transformable<prismatic_joint>::set_acceleration(const units::meters_per_se
     joint_info::set_accel(m_ligament.joint, value.value());
 }
 
-transformable<ball_joint>::transformable(const ligament_holder<ball_joint> ligament)
+transformable<ball_joint>::transformable(const engine::ligament_holder<ball_joint> ligament)
     : world_transformable<ball_joint>(ligament)
 {}
 
@@ -105,7 +105,7 @@ void transformable<ball_joint>::set_acceleration(const Eigen::Vector3<units::rad
     joint_info::set_accel(m_ligament.joint, unwrap<units::radians_per_second_squared, 3>(value));
 }
 
-transformable<free_joint>::transformable(const ligament_holder<free_joint> ligament)
+transformable<free_joint>::transformable(const engine::ligament_holder<free_joint> ligament)
     : world_transformable<autobot::sim::dynamics::free_joint>(ligament)
 {}
 
@@ -138,7 +138,7 @@ void transformable<free_joint>::set_linear_acceleration(const Eigen::Vector3<uni
     data.segment<3>(0) = unwrap<units::meters_per_second_squared, 3>(value);
     joint_info::set_accel(m_ligament.joint, data);
 }
-    
+
 Eigen::Vector3<units::radians> transformable<free_joint>::get_angular_position() const {
     return wrap<units::radians, 3>(joint_info::get_pos(m_ligament.joint).segment<3>(3));
 }
@@ -169,33 +169,37 @@ void transformable<free_joint>::set_angular_acceleration(const Eigen::Vector3<un
     joint_info::set_accel(m_ligament.joint, data);
 }
 
-container::container(const std::string_view name)
-    : container(body_holder(name))
-{}
-
-container::container(body_holder&& body)
+container::container(engine::body_holder&& body)
     : container(body, create_root(body))
 {}
 
-container::container(const body_holder& body, ligament_holder<free_joint>&& root)
+container::container(const engine::body_holder& body, engine::ligament_holder<free_joint>&& root)
     : transformable<free_joint>(root)
     , m_holder(body)
     , m_root(ligament<free_joint>{m_holder, root})
 {}
 
-ligament_holder<free_joint> container::create_root(body_holder& body) {
-    return create_ligament(body, nullptr, "root", empty_shape{}, free_joint{}, Eigen::Isometry3d::Identity(), ligament_aspect::all);
+engine::ligament_holder<free_joint> container::create_root(const engine::body_holder& body) {
+    return engine::create_ligament(body, nullptr, "root", empty_shape{}, free_joint{}, Eigen::Isometry3d::Identity(), ligament_aspect::all);
 }
 
-void world::add(const container& container) {
-    world_add(m_holder, container.m_holder);
+world::world()
+    : m_holder()
+{}
+
+container world::create(const std::string_view name) {
+    return container(engine::create_body(m_holder, name));
+}
+
+std::optional<raycast_result> world::raycast(const Eigen::Vector3d& origin, const Eigen::Vector3d& direction, const double max_distance) const {
+    return engine::raycast(m_holder, origin, direction, max_distance);
 }
 
 void world::step() {
     world_step(m_holder);
 }
 
-void world::render(std::function<void(const Eigen::Matrix4d&, visual_shape)>&& render_action) {
+void world::render(engine::render_function&& render_action) {
     world_render(m_holder, std::move(render_action));
 }
 

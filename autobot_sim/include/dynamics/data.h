@@ -32,9 +32,9 @@ struct empty_shape {
 };
 
 struct box_shape {
-    box_shape(units::meters length, units::meters width, units::meters height);
+    constexpr box_shape(units::meters length, units::meters width, units::meters height);
 
-    [[nodiscard]] Eigen::Vector3d dims() const;
+    [[nodiscard]] constexpr Eigen::Vector3d dims() const;
 
     units::meters length;
     units::meters width;
@@ -42,22 +42,22 @@ struct box_shape {
 };
 
 struct sphere_shape {
-    explicit sphere_shape(units::meters radius);
+    explicit constexpr sphere_shape(units::meters radius);
 
     units::meters radius;
 };
 
 struct cylinder_shape {
-    cylinder_shape(units::meters radius, units::meters height);
+    constexpr cylinder_shape(units::meters radius, units::meters height);
 
     units::meters radius;
     units::meters height;
 };
 
 struct ellipsoid_shape {
-    ellipsoid_shape(units::meters diameter_x, units::meters diameter_y, units::meters diameter_z);
+    constexpr ellipsoid_shape(units::meters diameter_x, units::meters diameter_y, units::meters diameter_z);
 
-    [[nodiscard]] Eigen::Vector3d dims() const;
+    [[nodiscard]] constexpr Eigen::Vector3d dims() const;
 
     units::meters diameter_x;
     units::meters diameter_y;
@@ -91,5 +91,40 @@ struct free_joint {
 template<typename t_>
 concept joint_type = std::is_same_v<t_, weld_joint> || std::is_same_v<t_, revolute_joint> ||
     std::is_same_v<t_, prismatic_joint> || std::is_same_v<t_, ball_joint> || std::is_same_v<t_, free_joint>;
+
+struct raycast_result {
+    units::meters distance;
+    Eigen::Vector3d impact_point;
+};
+
+constexpr box_shape::box_shape(const units::meters length, const units::meters width, const units::meters height)
+    : length(length)
+    , width(width)
+    , height(height)
+{}
+
+constexpr Eigen::Vector3d box_shape::dims() const {
+    return {length.value(), width.value(), height.value()};
+}
+
+constexpr sphere_shape::sphere_shape(const units::meters radius)
+    : radius(radius)
+{}
+
+constexpr cylinder_shape::cylinder_shape(const units::meters radius, const units::meters height)
+    : radius(radius)
+    , height(height)
+{}
+
+
+constexpr ellipsoid_shape::ellipsoid_shape(const units::meters diameter_x, const units::meters diameter_y, const units::meters diameter_z)
+    : diameter_x(diameter_x)
+    , diameter_y(diameter_y)
+    , diameter_z(diameter_z)
+{}
+
+constexpr Eigen::Vector3d ellipsoid_shape::dims() const {
+    return Eigen::Vector3d{diameter_x.value(), diameter_y.value(), diameter_z.value()};
+}
 
 }

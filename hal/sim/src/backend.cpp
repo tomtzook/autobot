@@ -168,7 +168,7 @@ result<float> value_read_f32(const device_id id, const device_type type, const v
 }
 
 result<void> value_write_u32(const device_id id, const device_type type, const value_key key, const uint32_t value) {
-    const auto lock = lock_instance();
+    auto lock = lock_instance();
 
     auto& data = get_global_data();
     const auto it = data.devices.find(id);
@@ -185,6 +185,7 @@ result<void> value_write_u32(const device_id id, const device_type type, const v
     def.u32 = value;
 
     if (def.callback != nullptr) {
+        lock.unlock();
         def.callback(id, key, generic_value{.type = data_type::unsigned_32bit, .u32 = value});
     }
 
@@ -192,7 +193,7 @@ result<void> value_write_u32(const device_id id, const device_type type, const v
 }
 
 result<void> value_write_f32(const device_id id, const device_type type, const value_key key, const float value) {
-    const auto lock = lock_instance();
+    auto lock = lock_instance();
 
     auto& data = get_global_data();
     const auto it = data.devices.find(id);
@@ -209,6 +210,7 @@ result<void> value_write_f32(const device_id id, const device_type type, const v
     def.f32 = value;
 
     if (def.callback != nullptr) {
+        lock.unlock();
         def.callback(id, key, generic_value{.type = data_type::floating_32bit, .f32 = value});
     }
 
@@ -216,7 +218,7 @@ result<void> value_write_f32(const device_id id, const device_type type, const v
 }
 
 result<void> value_pulse_u32(const device_id id, const device_type type, const value_key key, const uint32_t pulse_value, const uint32_t done_value, const std::chrono::microseconds duration) {
-    const auto lock = lock_instance();
+    auto lock = lock_instance();
 
     auto& data = get_global_data();
     const auto it = data.devices.find(id);
@@ -230,7 +232,7 @@ result<void> value_pulse_u32(const device_id id, const device_type type, const v
     }
 
     auto& def = port.values[key];
-    def.u32 = pulse_value;
+    def.u32 = done_value;
 
     // todo: simulate pulse
 
@@ -239,6 +241,8 @@ result<void> value_pulse_u32(const device_id id, const device_type type, const v
         generic_value.is_pulse = true;
         generic_value.pulse_info.done_value = done_value;
         generic_value.pulse_info.duration = duration;
+
+        lock.unlock();
         def.callback(id, key, generic_value);
     }
 

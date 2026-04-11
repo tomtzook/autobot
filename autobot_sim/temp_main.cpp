@@ -20,6 +20,8 @@
 static std::optional<glui::mesh> g_cube_mesh;
 
 int main() {
+    using namespace autobot::units::literals;
+
     glui::window window("Main Window", 1280, 720, glm::vec4(0.45f, 0.55f, 0.60f, 1.00f));
 
     g_cube_mesh = glui::cube_mesh(1, 1, 1);
@@ -62,13 +64,17 @@ int main() {
         auto render_context = renderer.start(camera.projection(), camera.view());
 
         // dart uses Z-axis as UP, while opengl uses Y-axis as up
-        Eigen::Isometry3d dartToOpengl = Eigen::Isometry3d::Identity();
-        dartToOpengl.linear() = Eigen::AngleAxisd(-M_PI/2, Eigen::Vector3d::UnitX()).toRotationMatrix();
+        //Eigen::Isometry3d dartToOpengl = Eigen::Isometry3d::Identity();
+        //dartToOpengl.linear() = Eigen::AngleAxisd(-M_PI/2, Eigen::Vector3d::UnitX()).toRotationMatrix();
+        Eigen::Matrix3d R_d2g;
+        R_d2g << 0, -1,  0,  // OpenGL X is DART -Y
+                 0,  0,  1,  // OpenGL Y is DART Z
+                 1,  0,  0;  // OpenGL Z is DART X
 
-        world.render([&render_context, &dartToOpengl](const auto& tf, const auto shape)->void {
+        world.render([&render_context](const Eigen::Matrix4d& tf, const auto shape)->void {
             glui::mesh* mesh_ptr = nullptr;
             switch (shape) {
-                case autobot::sim::dynamics::visual_shape::box:
+                case autobot::sim::dynamics::engine::visual_shape::box:
                     mesh_ptr = &g_cube_mesh.value();
                     break;
                 default:
@@ -76,17 +82,22 @@ int main() {
                     std::abort();
             }
 
-            Eigen::Matrix4f model_matrix = (dartToOpengl * tf).template cast<float>();
+            Eigen::Matrix4d S = Eigen::Matrix4d::Zero();
+            S(0, 1) = -1.0; // Row 0 (GL X) is -Col 1 (DART Y)
+            S(1, 2) =  1.0; // Row 1 (GL Y) is Col 2 (DART Z)
+            S(2, 0) =  -1.0; // Row 2 (GL Z) is Col 0 (DART X)
+            S(3, 3) =  1.0; // Keep the homogeneous w-component
+
+            //Eigen::Matrix4f model_matrix = (dartToOpengl * tf).template cast<float>();
+            Eigen::Matrix4d glT = S * tf * S.transpose();
+            Eigen::Matrix4f model_matrix = glT.cast<float>();
             render_context.render(glm::make_mat4(model_matrix.data()), *mesh_ptr);
         });
     });
 
-    autobot::sim::dynamics::container robot1("robot1");
-    world.add(robot1);
-
-    using namespace autobot::units::literals;
+    auto robot1 = world.create("robot1");
     auto ultrasonic_ligament = robot1.attach("ultrasonic",
-        autobot::sim::dynamics::box_shape(0.45_m, 0.15_m, 0.2_m),
+        autobot::sim::dynamics::box_shape(0.15_m, 0.45_m, 0.2_m),
         autobot::sim::dynamics::revolute_joint{.rotation_axis = Eigen::Vector3d::UnitZ()},
         Eigen::Isometry3d::Identity(),
         autobot::sim::dynamics::ligament_aspect::all);
@@ -94,6 +105,13 @@ int main() {
         autobot::sim::dynamics::box_shape(0.1_m, 0.1_m, 0.3_m),
         autobot::sim::dynamics::weld_joint{},
         autobot::sim::transform(0.2_m, 0.1_m, 0.1_m, 0.0_rad, 1.0_rad, 0.0_rad),
+        autobot::sim::dynamics::ligament_aspect::all);
+
+    auto robot2 = world.create("robot2");
+    auto robot2_lig1 = robot1.attach("lig1",
+        autobot::sim::dynamics::box_shape(0.45_m, 0.15_m, 0.2_m),
+        autobot::sim::dynamics::weld_joint{},
+        autobot::sim::transform(1.0_m, 0.0_m, 0.0_m, 0.0_rad, 0.0_rad, 0.0_rad),
         autobot::sim::dynamics::ligament_aspect::all);
 
     window.on_update([&window, &ultrasonic_ligament]()->void {
@@ -106,6 +124,13 @@ int main() {
             auto pos = ultrasonic_ligament.get_position();
             pos -= 1.0_rad;
             ultrasonic_ligament.set_position(pos);
+        }
+        if (window.get_key(GLFW_KEY_Y) == GLFW_PRESS) {
+            const auto res_opt = ultrasonic_ligament.raycast(Eigen::Vector3d{0.5, 0, 0}, ultrasonic_ligament.forward(), 5);
+            if (res_opt) {
+                const auto& res = res_opt.value();
+                printf("HIT: at %.3f,%.3f,%.3f distance %.3f\n", res.impact_point[0], res.impact_point[1], res.impact_point[2], res.distance);
+            }
         }
     }, 0.02);
 

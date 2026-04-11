@@ -160,6 +160,7 @@ enum : device_type {
     type_serial_i2c = 1 << 5,
     type_serial_spi = 1 << 6,
     type_serial_can = 1 << 7,
+    type_device_pulsewidth_reader = 1 << 8
 };
 
 inline const char* port_type_str(const device_type value) {
@@ -180,6 +181,8 @@ inline const char* port_type_str(const device_type value) {
             return "spi";
         case type_serial_can:
             return "can";
+        case type_device_pulsewidth_reader:
+            return "pulsewidth_reader";
         default:
             return "";
     }
@@ -229,6 +232,15 @@ inline bool is_type_serial(const device_type type) {
     }
 }
 
+inline bool is_device_serial(const device_type type) {
+    switch (type) {
+        case type_device_pulsewidth_reader:
+            return true;
+        default:
+            return false;
+    }
+}
+
 enum : config_key {
     config_digital_poll_edge = 1, // u32, rw, digital_poll_edge
     config_digital_resistor_mode = 2, // u32, rw, digital_resistor_mode
@@ -242,6 +254,7 @@ enum : value_key {
     value_digital_io_signal = 1, // u32, rw/dependent, digital_signal_value
     value_analog_io_signal = 2, // u32, rw/dependent, ADC units
     value_pwm_duty_cycle = 3, // u32, rw/dependent, microsecond period
+    value_pulsewidth_length = 4, // u32, r, length microseconds
 };
 
 enum digital_poll_edge : uint32_t {
@@ -286,6 +299,8 @@ inline bool is_value_supported_by_type(const device_type type, const config_key 
             return type & (type_port_analog_input | type_port_analog_output);
         case value_pwm_duty_cycle:
             return type & (type_port_pwm_output);
+        case value_pulsewidth_length:
+            return type & (type_device_pulsewidth_reader);
         default:
             return false;
     }
