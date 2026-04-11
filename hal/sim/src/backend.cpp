@@ -217,7 +217,7 @@ result<void> value_write_f32(const device_id id, const device_type type, const v
     return {};
 }
 
-result<void> value_pulse_u32(const device_id id, const device_type type, const value_key key, const uint32_t pulse_value, const uint32_t done_value, const std::chrono::microseconds duration) {
+result<void> value_pulse_u32(const device_id id, const device_type type, const value_key key, const uint32_t pulse_value, const uint32_t done_value, const uint32_t duration) {
     auto lock = lock_instance();
 
     auto& data = get_global_data();

@@ -17,7 +17,7 @@ struct generic_value {
     bool is_pulse;
     struct {
         uint32_t done_value;
-        std::chrono::microseconds duration;
+        uint32_t duration;
     } pulse_info;
 };
 

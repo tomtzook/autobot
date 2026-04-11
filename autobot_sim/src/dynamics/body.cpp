@@ -17,170 +17,246 @@ Eigen::Vector<dst_t_, size_> unwrap(const Eigen::Vector<src_t_, size_>& data) {
     return result;
 }
 
-transformable<weld_joint>::transformable(const engine::ligament_holder<weld_joint> ligament)
-    : world_transformable<weld_joint>(ligament)
+body_node::body_node(engine::body_holder body_holder, engine::body_node_holder holder)
+    : m_body_holder(std::move(body_holder))
+    , m_holder(std::move(holder))
 {}
 
-transformable<revolute_joint>::transformable(const engine::ligament_holder<revolute_joint> ligament)
-    : world_transformable<revolute_joint>(ligament)
+Eigen::Isometry3d body_node::get_world_transform() const {
+    return m_holder.body_node->getWorldTransform();
+}
+
+Eigen::Vector3d body_node::get_world_position() const {
+    return get_world_transform().translation();
+}
+
+Eigen::Quaterniond body_node::get_world_rotation() const {
+    const auto transform = get_world_transform();
+    auto quat = Eigen::Quaterniond(transform.linear());
+    quat.normalize();
+    return quat;
+}
+
+Eigen::Vector3d body_node::get_world_linear_velocity() const {
+    return m_holder.body_node->getLinearVelocity();
+}
+
+Eigen::Vector3d body_node::get_world_angular_velocity() const {
+    return m_holder.body_node->getAngularVelocity();
+}
+
+Eigen::Vector3d body_node::get_world_linear_acceleration() const {
+    return m_holder.body_node->getLinearAcceleration();
+}
+
+Eigen::Vector3d body_node::get_world_angular_acceleration() const {
+    return m_holder.body_node->getAngularAcceleration();
+}
+
+Eigen::Vector3d body_node::forward() const {
+    const auto axis = Eigen::Vector3d::UnitX();
+    return get_world_rotation() * axis;
+}
+
+Eigen::Vector3d body_node::backward() const {
+    const auto axis = -Eigen::Vector3d::UnitX();
+    return get_world_rotation() * axis;
+}
+
+Eigen::Vector3d body_node::left() const {
+    const auto axis = Eigen::Vector3d::UnitY();
+    return get_world_rotation() * axis;
+}
+
+Eigen::Vector3d body_node::right() const {
+    const auto axis = -Eigen::Vector3d::UnitY();
+    return get_world_rotation() * axis;
+}
+
+Eigen::Vector3d body_node::up() const {
+    const auto axis = Eigen::Vector3d::UnitZ();
+    return get_world_rotation() * axis;
+}
+
+Eigen::Vector3d body_node::down() const {
+    const auto axis = -Eigen::Vector3d::UnitZ();
+    return get_world_rotation() * axis;
+}
+
+std::optional<raycast_result> body_node::raycast(const Eigen::Vector3d& origin_offset, const Eigen::Vector3d& direction, const units::meters max_distance) const {
+    return raycast(origin_offset, direction, units::meters(0), max_distance);
+}
+
+std::optional<raycast_result> body_node::raycast(const Eigen::Vector3d& origin_offset, const Eigen::Vector3d& direction, const units::meters min_distance, const units::meters max_distance) const {
+    const auto origin = get_world_position() + origin_offset;
+    return engine::raycast(m_body_holder.world, origin, direction, min_distance, max_distance);
+}
+
+joint<weld_joint>::joint(const engine::joint_holder<weld_joint> joint)
+    : m_joint(std::move(joint))
 {}
 
-units::radians transformable<revolute_joint>::get_position() const {
-    return units::radians{joint_info::get_pos(m_ligament.joint)};
-}
-
-void transformable<revolute_joint>::set_position(const units::radians value) {
-    joint_info::set_pos(m_ligament.joint, value.value());
-}
-
-units::radians_per_second transformable<revolute_joint>::get_velocity() const {
-    return units::radians_per_second{joint_info::get_vel(m_ligament.joint)};
-}
-
-void transformable<revolute_joint>::set_velocity(const units::radians_per_second value) {
-    joint_info::set_vel(m_ligament.joint, value.value());
-}
-
-units::radians_per_second_squared transformable<revolute_joint>::get_acceleration() const {
-    return units::radians_per_second_squared{joint_info::get_accel(m_ligament.joint)};
-}
-
-void transformable<revolute_joint>::set_acceleration(const units::radians_per_second_squared value) {
-    joint_info::set_accel(m_ligament.joint, value.value());
-}
-
-units::meters transformable<prismatic_joint>::get_position() const {
-    return units::meters{joint_info::get_pos(m_ligament.joint)};
-}
-
-void transformable<prismatic_joint>::set_position(const units::meters value) {
-    joint_info::set_pos(m_ligament.joint, value.value());
-}
-
-transformable<prismatic_joint>::transformable(const engine::ligament_holder<prismatic_joint> ligament)
-    : world_transformable<prismatic_joint>(ligament)
+joint<revolute_joint>::joint(const engine::joint_holder<revolute_joint> joint)
+    : m_joint(std::move(joint))
 {}
 
-units::meters_per_second transformable<prismatic_joint>::get_velocity() const {
-    return units::meters_per_second{joint_info::get_vel(m_ligament.joint)};
+units::radians joint<revolute_joint>::get_position() const {
+    return units::radians{joint_info::get_pos(m_joint.joint)};
 }
 
-void transformable<prismatic_joint>::set_velocity(const units::meters_per_second value) {
-    joint_info::set_vel(m_ligament.joint, value.value());
+void joint<revolute_joint>::set_position(const units::radians value) {
+    joint_info::set_pos(m_joint.joint, value.value());
 }
 
-units::meters_per_second_squared transformable<prismatic_joint>::get_acceleration() const {
-    return units::meters_per_second_squared{joint_info::get_accel(m_ligament.joint)};
+units::radians_per_second joint<revolute_joint>::get_velocity() const {
+    return units::radians_per_second{joint_info::get_vel(m_joint.joint)};
 }
 
-void transformable<prismatic_joint>::set_acceleration(const units::meters_per_second_squared value) {
-    joint_info::set_accel(m_ligament.joint, value.value());
+void joint<revolute_joint>::set_velocity(const units::radians_per_second value) {
+    joint_info::set_vel(m_joint.joint, value.value());
 }
 
-transformable<ball_joint>::transformable(const engine::ligament_holder<ball_joint> ligament)
-    : world_transformable<ball_joint>(ligament)
+units::radians_per_second_squared joint<revolute_joint>::get_acceleration() const {
+    return units::radians_per_second_squared{joint_info::get_accel(m_joint.joint)};
+}
+
+void joint<revolute_joint>::set_acceleration(const units::radians_per_second_squared value) {
+    joint_info::set_accel(m_joint.joint, value.value());
+}
+
+units::meters joint<prismatic_joint>::get_position() const {
+    return units::meters{joint_info::get_pos(m_joint.joint)};
+}
+
+void joint<prismatic_joint>::set_position(const units::meters value) {
+    joint_info::set_pos(m_joint.joint, value.value());
+}
+
+joint<prismatic_joint>::joint(const engine::joint_holder<prismatic_joint> joint)
+    : m_joint(std::move(joint))
 {}
 
-Eigen::Vector3<units::radians> transformable<ball_joint>::get_position() const {
-    return wrap<units::radians, 3>(joint_info::get_pos(m_ligament.joint));
+units::meters_per_second joint<prismatic_joint>::get_velocity() const {
+    return units::meters_per_second{joint_info::get_vel(m_joint.joint)};
 }
 
-void transformable<ball_joint>::set_position(const Eigen::Vector3<units::radians>& value) {
-    joint_info::set_pos(m_ligament.joint, unwrap<units::radians, 3>(value));
+void joint<prismatic_joint>::set_velocity(const units::meters_per_second value) {
+    joint_info::set_vel(m_joint.joint, value.value());
 }
 
-Eigen::Vector3<units::radians_per_second> transformable<ball_joint>::get_velocity() const {
-    return wrap<units::radians_per_second, 3>(joint_info::get_vel(m_ligament.joint));
+units::meters_per_second_squared joint<prismatic_joint>::get_acceleration() const {
+    return units::meters_per_second_squared{joint_info::get_accel(m_joint.joint)};
 }
 
-void transformable<ball_joint>::set_velocity(const Eigen::Vector3<units::radians_per_second>& value) {
-    joint_info::set_vel(m_ligament.joint, unwrap<units::radians_per_second, 3>(value));
+void joint<prismatic_joint>::set_acceleration(const units::meters_per_second_squared value) {
+    joint_info::set_accel(m_joint.joint, value.value());
 }
 
-Eigen::Vector3<units::radians_per_second_squared> transformable<ball_joint>::get_acceleration() const {
-    return wrap<units::radians_per_second_squared, 3>(joint_info::get_accel(m_ligament.joint));
-}
-
-void transformable<ball_joint>::set_acceleration(const Eigen::Vector3<units::radians_per_second_squared>& value) {
-    joint_info::set_accel(m_ligament.joint, unwrap<units::radians_per_second_squared, 3>(value));
-}
-
-transformable<free_joint>::transformable(const engine::ligament_holder<free_joint> ligament)
-    : world_transformable<autobot::sim::dynamics::free_joint>(ligament)
+joint<ball_joint>::joint(const engine::joint_holder<ball_joint> joint)
+    : m_joint(std::move(joint))
 {}
 
-Eigen::Vector3<units::meters> transformable<free_joint>::get_linear_position() const {
-    return wrap<units::meters, 3>(joint_info::get_pos(m_ligament.joint).segment<3>(0));
+Eigen::Vector3<units::radians> joint<ball_joint>::get_position() const {
+    return wrap<units::radians, 3>(joint_info::get_pos(m_joint.joint));
 }
 
-void transformable<free_joint>::set_linear_position(const Eigen::Vector3<units::meters>& value) {
-    auto data = joint_info::get_pos(m_ligament.joint);
+void joint<ball_joint>::set_position(const Eigen::Vector3<units::radians>& value) {
+    joint_info::set_pos(m_joint.joint, unwrap<units::radians, 3>(value));
+}
+
+Eigen::Vector3<units::radians_per_second> joint<ball_joint>::get_velocity() const {
+    return wrap<units::radians_per_second, 3>(joint_info::get_vel(m_joint.joint));
+}
+
+void joint<ball_joint>::set_velocity(const Eigen::Vector3<units::radians_per_second>& value) {
+    joint_info::set_vel(m_joint.joint, unwrap<units::radians_per_second, 3>(value));
+}
+
+Eigen::Vector3<units::radians_per_second_squared> joint<ball_joint>::get_acceleration() const {
+    return wrap<units::radians_per_second_squared, 3>(joint_info::get_accel(m_joint.joint));
+}
+
+void joint<ball_joint>::set_acceleration(const Eigen::Vector3<units::radians_per_second_squared>& value) {
+    joint_info::set_accel(m_joint.joint, unwrap<units::radians_per_second_squared, 3>(value));
+}
+
+joint<free_joint>::joint(const engine::joint_holder<free_joint> joint)
+    : m_joint(std::move(joint))
+{}
+
+Eigen::Vector3<units::meters> joint<free_joint>::get_linear_position() const {
+    return wrap<units::meters, 3>(joint_info::get_pos(m_joint.joint).segment<3>(0));
+}
+
+void joint<free_joint>::set_linear_position(const Eigen::Vector3<units::meters>& value) {
+    auto data = joint_info::get_pos(m_joint.joint);
     data.segment<3>(0) = unwrap<units::meters, 3>(value);
-    joint_info::set_pos(m_ligament.joint, data);
+    joint_info::set_pos(m_joint.joint, data);
 }
 
-Eigen::Vector3<units::meters_per_second> transformable<free_joint>::get_linear_velocity() const {
-    return wrap<units::meters_per_second, 3>(joint_info::get_vel(m_ligament.joint).segment<3>(0));
+Eigen::Vector3<units::meters_per_second> joint<free_joint>::get_linear_velocity() const {
+    return wrap<units::meters_per_second, 3>(joint_info::get_vel(m_joint.joint).segment<3>(0));
 }
 
-void transformable<free_joint>::set_linear_velocity(const Eigen::Vector3<units::meters_per_second>& value) {
-    auto data = joint_info::get_vel(m_ligament.joint);
+void joint<free_joint>::set_linear_velocity(const Eigen::Vector3<units::meters_per_second>& value) {
+    auto data = joint_info::get_vel(m_joint.joint);
     data.segment<3>(0) = unwrap<units::meters_per_second, 3>(value);
-    joint_info::set_vel(m_ligament.joint, data);
+    joint_info::set_vel(m_joint.joint, data);
 }
 
-Eigen::Vector3<units::meters_per_second_squared> transformable<free_joint>::get_linear_acceleration() const {
-    return wrap<units::meters_per_second_squared, 3>(joint_info::get_vel(m_ligament.joint).segment<3>(0));
+Eigen::Vector3<units::meters_per_second_squared> joint<free_joint>::get_linear_acceleration() const {
+    return wrap<units::meters_per_second_squared, 3>(joint_info::get_vel(m_joint.joint).segment<3>(0));
 }
 
-void transformable<free_joint>::set_linear_acceleration(const Eigen::Vector3<units::meters_per_second_squared>& value) {
-    auto data = joint_info::get_accel(m_ligament.joint);
+void joint<free_joint>::set_linear_acceleration(const Eigen::Vector3<units::meters_per_second_squared>& value) {
+    auto data = joint_info::get_accel(m_joint.joint);
     data.segment<3>(0) = unwrap<units::meters_per_second_squared, 3>(value);
-    joint_info::set_accel(m_ligament.joint, data);
+    joint_info::set_accel(m_joint.joint, data);
 }
 
-Eigen::Vector3<units::radians> transformable<free_joint>::get_angular_position() const {
-    return wrap<units::radians, 3>(joint_info::get_pos(m_ligament.joint).segment<3>(3));
+Eigen::Vector3<units::radians> joint<free_joint>::get_angular_position() const {
+    return wrap<units::radians, 3>(joint_info::get_pos(m_joint.joint).segment<3>(3));
 }
 
-void transformable<free_joint>::set_angular_position(const Eigen::Vector3<units::radians>& value) {
-    auto data = joint_info::get_pos(m_ligament.joint);
+void joint<free_joint>::set_angular_position(const Eigen::Vector3<units::radians>& value) {
+    auto data = joint_info::get_pos(m_joint.joint);
     data.segment<3>(3) = unwrap<units::radians, 3>(value);
-    joint_info::set_accel(m_ligament.joint, data);
+    joint_info::set_accel(m_joint.joint, data);
 }
 
-Eigen::Vector3<units::radians_per_second> transformable<free_joint>::get_angular_velocity() const {
-    return wrap<units::radians_per_second, 3>(joint_info::get_vel(m_ligament.joint).segment<3>(3));
+Eigen::Vector3<units::radians_per_second> joint<free_joint>::get_angular_velocity() const {
+    return wrap<units::radians_per_second, 3>(joint_info::get_vel(m_joint.joint).segment<3>(3));
 }
 
-void transformable<free_joint>::set_angular_velocity(const Eigen::Vector3<units::radians_per_second>& value) {
-    auto data = joint_info::get_vel(m_ligament.joint);
+void joint<free_joint>::set_angular_velocity(const Eigen::Vector3<units::radians_per_second>& value) {
+    auto data = joint_info::get_vel(m_joint.joint);
     data.segment<3>(3) = unwrap<units::radians_per_second, 3>(value);
-    joint_info::set_accel(m_ligament.joint, data);
+    joint_info::set_accel(m_joint.joint, data);
 }
 
-Eigen::Vector3<units::radians_per_second_squared> transformable<free_joint>::get_angular_acceleration() const {
-    return wrap<units::radians_per_second_squared, 3>(joint_info::get_accel(m_ligament.joint).segment<3>(3));
+Eigen::Vector3<units::radians_per_second_squared> joint<free_joint>::get_angular_acceleration() const {
+    return wrap<units::radians_per_second_squared, 3>(joint_info::get_accel(m_joint.joint).segment<3>(3));
 }
 
-void transformable<free_joint>::set_angular_acceleration(const Eigen::Vector3<units::radians_per_second_squared>& value) {
-    auto data = joint_info::get_accel(m_ligament.joint);
+void joint<free_joint>::set_angular_acceleration(const Eigen::Vector3<units::radians_per_second_squared>& value) {
+    auto data = joint_info::get_accel(m_joint.joint);
     data.segment<3>(3) = unwrap<units::radians_per_second_squared, 3>(value);
-    joint_info::set_accel(m_ligament.joint, data);
+    joint_info::set_accel(m_joint.joint, data);
 }
 
 container::container(engine::body_holder&& body)
     : container(body, create_root(body))
 {}
 
-container::container(const engine::body_holder& body, engine::ligament_holder<free_joint>&& root)
-    : transformable<free_joint>(root)
+container::container(const engine::body_holder& body, ligament<free_joint>&& root)
+    : body_node(root.m_body_node)
     , m_holder(body)
-    , m_root(ligament<free_joint>{m_holder, root})
+    , m_root(std::move(root))
 {}
 
-engine::ligament_holder<free_joint> container::create_root(const engine::body_holder& body) {
-    return engine::create_ligament(body, nullptr, "root", empty_shape{}, free_joint{}, Eigen::Isometry3d::Identity(), ligament_aspect::all);
+ligament<free_joint> container::create_root(const engine::body_holder& body) {
+    auto [joint_holder, body_node_holder] = engine::create_ligament(body, std::nullopt, "root", empty_shape{}, free_joint{}, Eigen::Isometry3d::Identity(), ligament_aspect::all);
+    return {body, std::move(joint_holder), std::move(body_node_holder)};
 }
 
 world::world()
@@ -191,8 +267,12 @@ container world::create(const std::string_view name) {
     return container(engine::create_body(m_holder, name));
 }
 
-std::optional<raycast_result> world::raycast(const Eigen::Vector3d& origin, const Eigen::Vector3d& direction, const double max_distance) const {
-    return engine::raycast(m_holder, origin, direction, max_distance);
+std::optional<raycast_result> world::raycast(const Eigen::Vector3d& origin, const Eigen::Vector3d& direction, const units::meters max_distance) const {
+    return engine::raycast(m_holder, origin, direction, units::meters(0), max_distance);
+}
+
+std::optional<raycast_result> world::raycast(const Eigen::Vector3d& origin, const Eigen::Vector3d& direction, const units::meters min_distance, const units::meters max_distance) const {
+    return engine::raycast(m_holder, origin, direction, min_distance, max_distance);
 }
 
 void world::step() {

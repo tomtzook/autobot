@@ -52,6 +52,7 @@ result<handle> open(const device_id id, const device_type type) {
 
     if (const auto result = backend::init_device(*node); !result) {
         handles::release_handle(handle);
+        return error_result(result.error());
     }
 
     return handle;

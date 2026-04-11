@@ -126,7 +126,7 @@ result<void> value_write_f32(const handle handle, const value_key key, const flo
     return backend::value_write_f32(*node, key, value);
 }
 
-result<void> value_pulse_u32(const handle handle, const value_key key, const uint32_t pulse_value, const uint32_t done_value, const std::chrono::microseconds duration) {
+result<void> value_pulse_u32(const handle handle, const value_key key, const uint32_t pulse_value, const uint32_t done_value, const uint32_t duration) {
     if (const auto result = verify_valid_params(handle, key); !result) {
         return error_result(result.error());
     }

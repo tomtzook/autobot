@@ -160,7 +160,7 @@ enum : device_type {
     type_serial_i2c = 1 << 5,
     type_serial_spi = 1 << 6,
     type_serial_can = 1 << 7,
-    type_device_pulsewidth_reader = 1 << 8
+    type_pulsewidth_reader = 1 << 8
 };
 
 inline const char* port_type_str(const device_type value) {
@@ -181,7 +181,7 @@ inline const char* port_type_str(const device_type value) {
             return "spi";
         case type_serial_can:
             return "can";
-        case type_device_pulsewidth_reader:
+        case type_pulsewidth_reader:
             return "pulsewidth_reader";
         default:
             return "";
@@ -226,15 +226,6 @@ inline bool is_type_serial(const device_type type) {
         case type_serial_i2c:
         case type_serial_spi:
         case type_serial_can:
-            return true;
-        default:
-            return false;
-    }
-}
-
-inline bool is_device_serial(const device_type type) {
-    switch (type) {
-        case type_device_pulsewidth_reader:
             return true;
         default:
             return false;
@@ -300,7 +291,7 @@ inline bool is_value_supported_by_type(const device_type type, const config_key 
         case value_pwm_duty_cycle:
             return type & (type_port_pwm_output);
         case value_pulsewidth_length:
-            return type & (type_device_pulsewidth_reader);
+            return type & (type_pulsewidth_reader);
         default:
             return false;
     }

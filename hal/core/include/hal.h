@@ -105,7 +105,7 @@ struct device : base_device {
     [[nodiscard]] float read_value_f32(value_key key) const;
     void write_value_u32(value_key key, uint32_t value);
     void write_value_f32(value_key key, float value);
-    void pulse_value_u32(value_key key, uint32_t pulse_value, uint32_t done_value, std::chrono::microseconds duration);
+    void pulse_value_u32(value_key key, uint32_t pulse_value, uint32_t done_value, uint32_t duration);
 
     size_t read(std::span<uint8_t> buffer);
     void write(std::span<const uint8_t> buffer);
@@ -135,7 +135,14 @@ struct digital_output final : device {
 
     [[nodiscard]] digital_signal_value read() const;
     void write(digital_signal_value value);
-    void pulse(std::chrono::microseconds duration);
+    void pulse(uint32_t duration);
+};
+
+struct pulse_width_reader final : device {
+    pulse_width_reader() = default;
+    explicit pulse_width_reader(handle handle);
+
+    uint32_t read() const;
 };
 
 handle open_device(device_id id, device_type type);
@@ -148,6 +155,8 @@ auto open_device(const device_id id) {
             return digital_input(handle);
         case type_port_digital_output:
             return digital_output(handle);
+        case type_pulsewidth_reader:
+            return pulse_width_reader(handle);
         case type_port_analog_input:
         case type_port_analog_output:
         case type_port_pwm_output:

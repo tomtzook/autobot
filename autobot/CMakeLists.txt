@@ -12,6 +12,7 @@ set(SOURCES
         include/sim/dc_motor.h
         include/dashboard/object.h
         include/dashboard/toggle.h
+        include/devices/hcsr04.h
 
         src/math/plant/dc_motor.cpp
         src/sim/dc_motor.cpp
@@ -31,15 +32,4 @@ target_include_directories(autobot
         $<INSTALL_INTERFACE:include/autobot>
         PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/src)
-target_link_libraries(autobot PUBLIC obsr::obsr Eigen3::Eigen PRIVATE looper::looper)
-
-install(TARGETS autobot EXPORT autobot
-        LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"
-        ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
-        RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}")
-install(FILES ${INCLUDE_FILES}
-        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/autobot)
-install(EXPORT autobot
-        FILE autobotConfig.cmake
-        NAMESPACE autobot::
-        DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/autobot")
+target_link_libraries(autobot PUBLIC autobot_hal obsr::obsr Eigen3::Eigen PRIVATE looper::looper)

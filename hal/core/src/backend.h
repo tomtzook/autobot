@@ -19,7 +19,7 @@ result<uint32_t> value_read_u32(const handles::handle_node& node, value_key key)
 result<float> value_read_f32(const handles::handle_node& node, value_key key);
 result<void> value_write_u32(const handles::handle_node& node, value_key key, uint32_t value);
 result<void> value_write_f32(const handles::handle_node& node, value_key key, float value);
-result<void> value_pulse_u32(const handles::handle_node& node, value_key key, uint32_t pulse_value, uint32_t done_value, std::chrono::microseconds duration);
+result<void> value_pulse_u32(const handles::handle_node& node, value_key key, uint32_t pulse_value, uint32_t done_value, uint32_t duration);
 
 result<size_t> serial_read(const handles::handle_node& node, std::span<uint8_t> buffer);
 result<void> serial_write(const handles::handle_node& node, std::span<const uint8_t> buffer);

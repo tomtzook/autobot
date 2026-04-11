@@ -11,10 +11,13 @@
 #include <glui/camera.h>
 #include <glui/window.h>
 
+#include <hal.h>
+#include <hal_sim.h>
 #include <units.h>
 
 #include "dynamics/body.h"
 #include "transform.h"
+#include "devices/hcsr04.h"
 
 
 static std::optional<glui::mesh> g_cube_mesh;
@@ -95,17 +98,21 @@ int main() {
         });
     });
 
+    autobot::hal::initialize(autobot::hal::sim::initialize);
+    autobot::hal::sim::define(1, "trig", autobot::hal::type_port_digital_output);
+    autobot::hal::sim::define_value(1, autobot::hal::value_digital_io_signal, "iosig", autobot::hal::type_port_digital_output, autobot::hal::data_type::unsigned_32bit, autobot::hal::data_permission::readwrite, autobot::hal::value_capabilities::pulse);
+    autobot::hal::sim::define(2, "echo", autobot::hal::type_pulsewidth_reader);
+    autobot::hal::sim::define_value(2, autobot::hal::value_pulsewidth_length, "pulse", autobot::hal::type_pulsewidth_reader, autobot::hal::data_type::unsigned_32bit, autobot::hal::data_permission::readonly);
+
     auto robot1 = world.create("robot1");
     auto ultrasonic_ligament = robot1.attach("ultrasonic",
-        autobot::sim::dynamics::box_shape(0.15_m, 0.45_m, 0.2_m),
+        autobot::sim::hcsr04::shape,
         autobot::sim::dynamics::revolute_joint{.rotation_axis = Eigen::Vector3d::UnitZ()},
         Eigen::Isometry3d::Identity(),
         autobot::sim::dynamics::ligament_aspect::all);
-    auto ligament2 = robot1.attach("lig2",
-        autobot::sim::dynamics::box_shape(0.1_m, 0.1_m, 0.3_m),
-        autobot::sim::dynamics::weld_joint{},
-        autobot::sim::transform(0.2_m, 0.1_m, 0.1_m, 0.0_rad, 1.0_rad, 0.0_rad),
-        autobot::sim::dynamics::ligament_aspect::all);
+
+    autobot::sim::hcsr04 hcsr04_sim(ultrasonic_ligament.get_node(), 1, 2);
+    auto echo_reader = autobot::hal::pulse_width_reader(autobot::hal::open_device(2, autobot::hal::type_pulsewidth_reader));
 
     auto robot2 = world.create("robot2");
     auto robot2_lig1 = robot1.attach("lig1",
@@ -114,23 +121,22 @@ int main() {
         autobot::sim::transform(1.0_m, 0.0_m, 0.0_m, 0.0_rad, 0.0_rad, 0.0_rad),
         autobot::sim::dynamics::ligament_aspect::all);
 
-    window.on_update([&window, &ultrasonic_ligament]()->void {
+    window.on_update([&window, &ultrasonic_ligament, &hcsr04_sim, &echo_reader]()->void {
         if (window.get_key(GLFW_KEY_T) == GLFW_PRESS) {
-            auto pos = ultrasonic_ligament.get_position();
+            auto pos = ultrasonic_ligament.get_joint().get_position();
             pos += 1.0_rad;
-            ultrasonic_ligament.set_position(pos);
+            ultrasonic_ligament.get_joint().set_position(pos);
         }
         if (window.get_key(GLFW_KEY_R) == GLFW_PRESS) {
-            auto pos = ultrasonic_ligament.get_position();
+            auto pos = ultrasonic_ligament.get_joint().get_position();
             pos -= 1.0_rad;
-            ultrasonic_ligament.set_position(pos);
+            ultrasonic_ligament.get_joint().set_position(pos);
         }
         if (window.get_key(GLFW_KEY_Y) == GLFW_PRESS) {
-            const auto res_opt = ultrasonic_ligament.raycast(Eigen::Vector3d{0.5, 0, 0}, ultrasonic_ligament.forward(), 5);
-            if (res_opt) {
-                const auto& res = res_opt.value();
-                printf("HIT: at %.3f,%.3f,%.3f distance %.3f\n", res.impact_point[0], res.impact_point[1], res.impact_point[2], res.distance);
-            }
+            hcsr04_sim.measure();
+
+            const auto length = echo_reader.read();
+            printf("LEN: at %u\n", length);
         }
     }, 0.02);
 

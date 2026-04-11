@@ -191,24 +191,31 @@ struct joint_info<free_joint> {
     }
 };
 
-template<joint_type joint_t_>
-struct ligament_holder {
-    using raw_joint_type = joint_info<joint_t_>::type;
+struct body_node_holder {
     using raw_body_type = dart::dynamics::BodyNode;
 
-    ligament_holder(raw_joint_type* joint, raw_body_type* body_node)
+    explicit body_node_holder(raw_body_type* body_node)
+        : body_node(body_node)
+    {}
+
+    raw_body_type* body_node;
+};
+
+template<joint_type joint_t_>
+struct joint_holder {
+    using raw_joint_type = joint_info<joint_t_>::type;
+
+    explicit joint_holder(raw_joint_type* joint)
         : joint(joint)
-        , body_node(body_node)
     {}
 
     raw_joint_type* joint;
-    raw_body_type* body_node;
 };
 
 struct world_holder {
     explicit world_holder()
         : world(dart::simulation::World::create())
-        , collision_group(){
+        , collision_group() {
         const auto bulletDetector = dart::collision::BulletCollisionDetector::create();
         world->getConstraintSolver()->setCollisionDetector(bulletDetector);
         collision_group = world->getConstraintSolver()->getCollisionDetector()->createCollisionGroupAsSharedPtr();
@@ -249,9 +256,9 @@ inline body_holder create_body(const world_holder& world, const std::string_view
 }
 
 template<shape_type shape_t_, joint_type joint_t_>
-ligament_holder<joint_t_> create_ligament(
+std::pair<joint_holder<joint_t_>, body_node_holder> create_ligament(
     const body_holder& body,
-    dart::dynamics::BodyNode* parent,
+    const std::optional<std::reference_wrapper<body_node_holder>> parent,
     const std::string_view name,
     const shape_t_& shape,
     const joint_t_& joint,
@@ -268,8 +275,9 @@ ligament_holder<joint_t_> create_ligament(
     dart::dynamics::BodyNode::Properties body_props;
     body_props.mName = name;
 
+    const auto parent_raw = parent.has_value() ? parent.value().get().body_node : nullptr;
     auto [created_joint, body_node] =
-            body.skeleton->createJointAndBodyNodePair<underlying_joint_type>(parent, joint_props, body_props);
+            body.skeleton->createJointAndBodyNodePair<underlying_joint_type>(parent_raw, joint_props, body_props);
 
     if constexpr (!std::is_same_v<shape_t_, empty_shape>) {
         auto shape_ptr = shape_info::create(shape);
@@ -279,7 +287,7 @@ ligament_holder<joint_t_> create_ligament(
 
     body.world.collision_group->addShapeFramesOf(body_node);
 
-    return {created_joint, body_node};
+    return {joint_holder<joint_t_>{created_joint}, body_node_holder{body_node}};
 }
 
 static visual_shape get_visual_shape(dart::dynamics::ShapeNode* node) {
