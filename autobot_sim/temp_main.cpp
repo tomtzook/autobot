@@ -15,9 +15,9 @@
 #include <hal_sim.h>
 #include <autobot/units.h>
 
-#include "dynamics/body.h"
-#include "transform.h"
-#include "devices/hcsr04.h"
+#include "autobot_sim/dynamics/body.h"
+#include "autobot_sim/transform.h"
+#include "autobot_sim/devices/hcsr04.h"
 
 
 static std::optional<glui::mesh> g_cube_mesh;

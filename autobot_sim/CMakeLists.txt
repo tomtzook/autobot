@@ -1,9 +1,9 @@
 add_library(autobot_sim STATIC src/empty.cpp
-        include/devices/hcsr04.h
-        include/transform.h
-        include/dynamics/engine.h
-        include/dynamics/data.h
-        include/dynamics/body.h
+        include/autobot_sim/devices/hcsr04.h
+        include/autobot_sim/transform.h
+        include/autobot_sim/dynamics/engine.h
+        include/autobot_sim/dynamics/data.h
+        include/autobot_sim/dynamics/body.h
 
         src/devices/hcsr04.cpp
         src/dynamics/data.cpp

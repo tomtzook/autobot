@@ -3,7 +3,7 @@
 #include <hal_sim.h>
 #include <autobot/units.h>
 
-#include "dynamics/body.h"
+#include "autobot_sim/dynamics/body.h"
 
 namespace autobot::sim {
 

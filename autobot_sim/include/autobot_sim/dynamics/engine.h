@@ -3,7 +3,7 @@
 #include <dart/dart.hpp>
 #include <dart/collision/bullet/BulletCollisionDetector.hpp>
 
-#include "dynamics/data.h"
+#include "autobot_sim/dynamics/data.h"
 
 namespace autobot::sim::dynamics::engine {
 
