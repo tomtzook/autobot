@@ -23,6 +23,7 @@ set(SOURCES
         src/dashboard/toggle.cpp
         src/dashboard/canvas.cpp
         src/dashboard/world.cpp
+        include/autobot/math/transform.h
 )
 
 add_library(autobot STATIC ${SOURCES})

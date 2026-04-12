@@ -1,9 +1,25 @@
 
-#include "autobot_sim/dynamics/engine.h"
+#include "autobot_sim/dynamics/engine/world.h"
 
 namespace autobot::sim::dynamics::engine {
 
-void world_render(const world_holder& world, render_function&& render_action) {
+static visual_shape get_visual_shape(dart::dynamics::ShapeNode* node) {
+    const auto& shape_type = node->getShape()->getType();
+    if (shape_type == dart::dynamics::BoxShape::getStaticType()) {
+        return visual_shape::box;
+    }
+    if (shape_type == dart::dynamics::SphereShape::getStaticType()) {
+        return visual_shape::sphere;
+    }
+
+    return visual_shape::unknown;
+}
+
+void step_world(const world_holder& world) {
+    world.world->step();
+}
+
+void render_world(const world_holder& world, render_function&& render_action) {
     for (size_t i = 0; i < world.world->getNumSkeletons(); ++i) {
         const auto skeleton = world.world->getSkeleton(i);
         for (size_t j = 0; j < skeleton->getNumBodyNodes(); ++j) {
@@ -40,25 +56,6 @@ void world_render(const world_holder& world, render_function&& render_action) {
             }
         }
     }
-}
-
-std::optional<raycast_result> raycast(const world_holder& world, const Eigen::Vector3d& origin, const Eigen::Vector3d& direction, const units::meters min_distance, const units::meters max_distance) {
-    const auto to = origin + (direction * max_distance.value()).eval();
-
-    dart::collision::RaycastOption option;
-    option.mEnableAllHits = false;
-    option.mSortByClosest = true;
-    dart::collision::RaycastResult result;
-    if (world.collision_group->raycast(origin, to, option, &result)) {
-        const auto& first_hit = result.mRayHits[0];
-        const auto hit_point = first_hit.mPoint;
-        const auto hit_distance = units::meters((origin - hit_point).norm());
-        if (hit_distance >= min_distance) {
-            return raycast_result{hit_distance, hit_point};
-        }
-    }
-
-    return std::nullopt;
 }
 
 }

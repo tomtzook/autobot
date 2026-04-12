@@ -1,6 +1,7 @@
 #pragma once
 
 #include <autobot/units.h>
+#include <autobot/math/transform.h>
 
 namespace autobot::sim::dynamics {
 
@@ -73,7 +74,7 @@ struct weld_joint {
 };
 
 struct revolute_joint {
-    Eigen::Vector3d rotation_axis;
+    math::axis3 rotation_axis;
 };
 
 struct prismatic_joint {
@@ -92,10 +93,6 @@ template<typename t_>
 concept joint_type = std::is_same_v<t_, weld_joint> || std::is_same_v<t_, revolute_joint> ||
     std::is_same_v<t_, prismatic_joint> || std::is_same_v<t_, ball_joint> || std::is_same_v<t_, free_joint>;
 
-struct raycast_result {
-    units::meters distance;
-    Eigen::Vector3d impact_point;
-};
 
 constexpr box_shape::box_shape(const units::meters length, const units::meters width, const units::meters height)
     : length(length)

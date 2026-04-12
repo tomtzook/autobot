@@ -80,25 +80,6 @@ struct joint_info<revolute_joint> {
         props.mAxis = joint.rotation_axis;
         return props;
     }
-
-    static double get_pos(const type* joint) {
-        return joint->getPosition(0);
-    }
-    static void set_pos(type* joint, const double value) {
-        joint->setPosition(0, value);
-    }
-    static double get_vel(const type* joint) {
-        return joint->getVelocity(0);
-    }
-    static void set_vel(type* joint, const double value) {
-        joint->setVelocity(0, value);
-    }
-    static double get_accel(const type* joint) {
-        return joint->getAcceleration(0);
-    }
-    static void set_accel(type* joint, const double value) {
-        joint->setAcceleration(0, value);
-    }
 };
 
 template<>
@@ -109,25 +90,6 @@ struct joint_info<prismatic_joint> {
     static props create_props(const prismatic_joint& joint) {
         props props;
         return props;
-    }
-
-    static double get_pos(const type* joint) {
-        return joint->getPosition(0);
-    }
-    static void set_pos(type* joint, const double value) {
-        joint->setPosition(0, value);
-    }
-    static double get_vel(const type* joint) {
-        return joint->getVelocity(0);
-    }
-    static void set_vel(type* joint, const double value) {
-        joint->setVelocity(0, value);
-    }
-    static double get_accel(const type* joint) {
-        return joint->getAcceleration(0);
-    }
-    static void set_accel(type* joint, const double value) {
-        joint->setAcceleration(0, value);
     }
 };
 
@@ -140,25 +102,6 @@ struct joint_info<ball_joint> {
         props props;
         return props;
     }
-
-    static Eigen::Vector3d get_pos(const type* joint) {
-        return joint->getPositions();
-    }
-    static void set_pos(type* joint, const Eigen::Vector3d& value) {
-        joint->setPositions(value);
-    }
-    static Eigen::Vector3d get_vel(const type* joint) {
-        return joint->getVelocities();
-    }
-    static void set_vel(type* joint, const Eigen::Vector3d& value) {
-        joint->setVelocities(value);
-    }
-    static Eigen::Vector3d get_accel(const type* joint) {
-        return joint->getAccelerations();
-    }
-    static void set_accel(type* joint, const Eigen::Vector3d& value) {
-        joint->setAccelerations(value);
-    }
 };
 
 template<>
@@ -169,25 +112,6 @@ struct joint_info<free_joint> {
     static props create_props(const free_joint& joint) {
         props props;
         return props;
-    }
-
-    static Eigen::Vector6d get_pos(const type* joint) {
-        return joint->getPositions();
-    }
-    static void set_pos(type* joint, const Eigen::Vector6d& value) {
-        joint->setPositions(value);
-    }
-    static Eigen::Vector6d get_vel(const type* joint) {
-        return joint->getVelocities();
-    }
-    static void set_vel(type* joint, const Eigen::Vector6d& value) {
-        joint->setVelocities(value);
-    }
-    static Eigen::Vector6d get_accel(const type* joint) {
-        return joint->getAccelerations();
-    }
-    static void set_accel(type* joint, const Eigen::Vector6d& value) {
-        joint->setAccelerations(value);
     }
 };
 
@@ -212,6 +136,14 @@ struct joint_holder {
     raw_joint_type* joint;
 };
 
+struct body_holder {
+    explicit body_holder(const std::string_view name)
+        : skeleton(dart::dynamics::Skeleton::create(name.data()))
+    {}
+
+    dart::dynamics::SkeletonPtr skeleton;
+};
+
 struct world_holder {
     explicit world_holder()
         : world(dart::simulation::World::create())
@@ -224,16 +156,6 @@ struct world_holder {
 
     dart::simulation::WorldPtr world;
     dart::collision::CollisionGroupPtr collision_group;
-};
-
-struct body_holder {
-    explicit body_holder(const world_holder& world, const std::string_view name)
-        : world(world)
-        , skeleton(dart::dynamics::Skeleton::create(name.data()))
-    {}
-
-    world_holder world;
-    dart::dynamics::SkeletonPtr skeleton;
 };
 
 inline void create_aspects(dart::dynamics::ShapeNode* node, const ligament_aspect aspects) {
@@ -249,7 +171,7 @@ inline void create_aspects(dart::dynamics::ShapeNode* node, const ligament_aspec
 }
 
 inline body_holder create_body(const world_holder& world, const std::string_view name) {
-    body_holder body(world, name);
+    body_holder body(name);
     world.world->addSkeleton(body.skeleton);
 
     return body;
@@ -257,6 +179,7 @@ inline body_holder create_body(const world_holder& world, const std::string_view
 
 template<shape_type shape_t_, joint_type joint_t_>
 std::pair<joint_holder<joint_t_>, body_node_holder> create_ligament(
+    const world_holder& world,
     const body_holder& body,
     const std::optional<std::reference_wrapper<body_node_holder>> parent,
     const std::string_view name,
@@ -285,7 +208,7 @@ std::pair<joint_holder<joint_t_>, body_node_holder> create_ligament(
         create_aspects(shape_node, aspects);
     }
 
-    body.world.collision_group->addShapeFramesOf(body_node);
+    world.collision_group->addShapeFramesOf(body_node);
 
     return {joint_holder<joint_t_>{created_joint}, body_node_holder{body_node}};
 }
@@ -308,6 +231,5 @@ inline void world_step(const world_holder& holder) {
 
 using render_function = std::function<void(const Eigen::Matrix4d&, visual_shape)>;
 void world_render(const world_holder& world, render_function&& render_action);
-std::optional<raycast_result> raycast(const world_holder& world, const Eigen::Vector3d& origin, const Eigen::Vector3d& direction, units::meters min_distance, units::meters max_distance);
 
 }

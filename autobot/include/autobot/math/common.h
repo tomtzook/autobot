@@ -2,6 +2,7 @@
 
 #include <cmath>
 #include <Eigen/Core>
+#include <Eigen/Geometry>
 
 namespace autobot::math {
 
@@ -26,7 +27,11 @@ using vector3d = Eigen::Vector3<integer_type>;
 using vector3f = Eigen::Vector3<floating_type>;
 using matrix3d = Eigen::Matrix3<integer_type>;
 using matrix3f = Eigen::Matrix3<floating_type>;
+using matrix4f = Eigen::Matrix4<floating_type>;
+using quaternionf = Eigen::Quaternion<floating_type>;
 
+template<size_t size>
+using vectorf = Eigen::Vector<floating_type, size>;
 
 template<std::floating_point type_ = floating_type>
 constexpr type_ translate_angle(const type_ deg) {

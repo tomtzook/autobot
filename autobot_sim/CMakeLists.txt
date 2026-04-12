@@ -1,14 +1,17 @@
-add_library(autobot_sim STATIC src/empty.cpp
+add_library(autobot_sim STATIC
         include/autobot_sim/devices/hcsr04.h
-        include/autobot_sim/transform.h
-        include/autobot_sim/dynamics/engine.h
         include/autobot_sim/dynamics/data.h
-        include/autobot_sim/dynamics/body.h
 
         src/devices/hcsr04.cpp
-        src/dynamics/data.cpp
+        include/autobot_sim/dynamics/body.h
         src/dynamics/body.cpp
-        src/dynamics/engine.cpp
+        include/autobot_sim/dynamics/engine/base.h
+        include/autobot_sim/dynamics/engine/skeleton.h
+        include/autobot_sim/dynamics/engine/raycast.h
+        include/autobot_sim/dynamics/engine/world.h
+        src/dynamics/engine/world.cpp
+        src/dynamics/engine/raycast.cpp
+        src/dynamics/engine/skeleton.cpp
 )
 target_include_directories(autobot_sim
         PUBLIC
