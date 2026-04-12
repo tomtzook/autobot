@@ -12,6 +12,8 @@ add_library(autobot_sim STATIC
         src/dynamics/engine/world.cpp
         src/dynamics/engine/raycast.cpp
         src/dynamics/engine/skeleton.cpp
+        src/dynamics/engine/info.h
+        src/dynamics/engine/holders.h
 )
 target_include_directories(autobot_sim
         PUBLIC

@@ -12,7 +12,7 @@ template<joint_type joint_t_>
 class base_joint {
 public:
     using joint_info = engine::joint_info<joint_t_>;
-    using raw_type = engine::jointed_ligament_holder<joint_t_>;
+    using raw_type = engine::ligament_holder_ptr;
 
     explicit base_joint(const raw_type& underlying) : m_underlying(underlying) {}
 
@@ -123,13 +123,13 @@ public:
     std::pair<joint<joint_t_>, ligament> attach(std::string_view name, const t_& shape, const joint_t_& joint_info, const math::transform3& transform = math::transform3());
 
 protected:
-    void attach(const engine::ligament_holder& node);
+    void attach(const engine::ligament_holder_ptr& node);
 
 private:
-    [[nodiscard]] const engine::ligament_holder& get_node() const;
-    [[nodiscard]] engine::ligament_holder& get_node();
+    [[nodiscard]] const engine::ligament_holder_ptr& get_node() const;
+    [[nodiscard]] engine::ligament_holder_ptr& get_node();
 
-    std::optional<engine::ligament_holder> m_node{};
+    std::optional<engine::ligament_holder_ptr> m_node{};
 };
 
 class body : public ligament {
@@ -138,9 +138,10 @@ public:
     joint<free_joint>& get_joint();
 
 private:
-    explicit body(engine::body_holder&& underlying);
+    explicit body(engine::body_holder_ptr&& underlying);
 
-    engine::body_holder m_underlying;
+    engine::body_holder_ptr m_underlying;
+    engine::ligament_holder_ptr m_root_ligament;
     joint<free_joint> m_joint;
 
     friend class world;
@@ -148,12 +149,14 @@ private:
 
 class world {
 public:
+    world();
+
     body create_body(std::string_view name);
     void step();
     void render(engine::render_function&& render_action) const;
 
 private:
-    engine::world_holder m_underlying;
+    engine::world_holder_ptr m_underlying;
 };
 
 template<std::derived_from<ligament> t_, joint_type joint_t_>
