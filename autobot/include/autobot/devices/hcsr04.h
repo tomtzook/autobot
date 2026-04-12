@@ -41,7 +41,7 @@ void hcsr04<unit_>::trigger() {
 }
 
 template<units::unit_of_category_type<units::category::length> unit_>
-std::optional<hcsr04<unit_>::type> hcsr04<unit_>::read_distance() const {
+std::optional<typename hcsr04<unit_>::type> hcsr04<unit_>::read_distance() const {
     const auto opt = read_last_distance();
     if (!opt) {
         return std::nullopt;

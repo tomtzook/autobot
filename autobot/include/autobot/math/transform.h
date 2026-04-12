@@ -207,11 +207,16 @@ template<units::unit_of_category_type<units::category::length> unit_trans_, unit
 struct base_transform3 {
     using translation_type = base_linear3<unit_trans_>;
     using rotation_type = base_rotation3<unit_rot_>;
+    using translation_underlying_type = translation_type::type;
+    using rotation_underlying_type = rotation_type::type;
     using isometry = Eigen::Transform<floating_type, 3, Eigen::Isometry>;
 
     explicit constexpr base_transform3() : m_data(isometry::Identity()) {}
     explicit constexpr base_transform3(const isometry& data) : m_data(data) {}
     explicit constexpr base_transform3(const translation_type& translation, const rotation_type& rotation) : m_data(create(translation, rotation)) {}
+    explicit constexpr base_transform3(
+        const translation_underlying_type x, const translation_underlying_type y, const translation_underlying_type z,
+        const rotation_underlying_type roll, const rotation_underlying_type pitch, const rotation_underlying_type yaw) : base_transform3(translation_type{x,y,z}, rotation_type{roll,pitch,yaw}) {}
     constexpr base_transform3(const base_transform3&) = default;
     constexpr base_transform3(base_transform3&&) = default;
 
@@ -222,8 +227,8 @@ struct base_transform3 {
     translation_type translation() const { return translation_type{m_data.translation()}; }
     void translation(const translation_type& value) const { m_data.translation() = value.raw(); }
 
-    rotation_type rotation() const { return rotation_type{m_data.rotation()}; }
-    void rotation(const rotation_type& rotation) { m_data.rotation() = rotation.quat(); }
+    rotation_type rotation() const { return rotation_type{m_data.linear()}; }
+    void rotation(const rotation_type& rotation) { m_data.linear() = rotation.mat(); }
 
     [[nodiscard]] const isometry& raw() const { return m_data; }
     [[nodiscard]] isometry& raw() { return m_data; }
@@ -232,7 +237,7 @@ private:
     static isometry create(const translation_type& translation, const rotation_type& rotation) {
         isometry data;
         data.translation() = translation.raw();
-        data.rotation() = rotation.quat();
+        data.linear() = rotation.mat();
         return data;
     }
 

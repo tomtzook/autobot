@@ -117,8 +117,10 @@ public:
 
     [[nodiscard]] std::optional<units::meters> raycast(const math::translation3& origin_offset, const math::axis3& axis, units::meters min, units::meters max) const;
 
-    template<typename t_, joint_type joint_t_>
+    template<std::derived_from<ligament> t_, joint_type joint_t_>
     joint<joint_t_> attach(std::string_view name, t_& node, const joint_t_& joint_info, const math::transform3& transform = math::transform3());
+    template<shape_type t_, joint_type joint_t_>
+    std::pair<joint<joint_t_>, ligament> attach(std::string_view name, const t_& shape, const joint_t_& joint_info, const math::transform3& transform = math::transform3());
 
 protected:
     void attach(const engine::ligament_holder& node);
@@ -151,19 +153,36 @@ private:
     engine::world_holder m_underlying;
 };
 
-template<typename t_, joint_type joint_t_>
+template<std::derived_from<ligament> t_, joint_type joint_t_>
 joint<joint_t_> ligament::attach(const std::string_view name, t_& node, const joint_t_& joint_info, const math::transform3& transform) {
     auto& this_node = get_node();
-    auto ligament = engine::create_ligament(
+    auto ligament_holder = engine::create_ligament(
         this_node,
         name,
         t_::shape,
         joint_info,
         transform.raw(),
         ligament_aspect::all);
-    node.attach(ligament);
+    node.attach(ligament_holder);
 
-    return joint<joint_t_>{ligament};
+    return joint<joint_t_>{ligament_holder};
+}
+
+template<shape_type t_, joint_type joint_t_>
+std::pair<joint<joint_t_>, ligament> ligament::attach(const std::string_view name, const t_& shape, const joint_t_& joint_info, const math::transform3& transform) {
+    auto& this_node = get_node();
+    auto ligament_holder = engine::create_ligament(
+        this_node,
+        name,
+        shape,
+        joint_info,
+        transform.raw(),
+        ligament_aspect::all);
+
+    ligament ligament;
+    ligament.attach(ligament_holder);
+
+    return {joint<joint_t_>{ligament_holder}, std::move(ligament)};
 }
 
 }

@@ -14,6 +14,7 @@
 #include <hal.h>
 #include <hal_sim.h>
 #include <autobot/units.h>
+#include <autobot/devices/hcsr04.h>
 
 #include "autobot_sim/dynamics/body.h"
 #include "autobot_sim/devices/hcsr04.h"
@@ -103,27 +104,19 @@ int main() {
     autobot::hal::sim::define(2, "echo", autobot::hal::type_pulsewidth_reader);
     autobot::hal::sim::define_value(2, autobot::hal::value_pulsewidth_length, "pulse", autobot::hal::type_pulsewidth_reader, autobot::hal::data_type::unsigned_32bit, autobot::hal::data_permission::readonly);
 
-    auto robot1 = world.create_body("robot1");
-    /*auto ultrasonic_ligament = robot1.attach("ultrasonic",
-        autobot::sim::hcsr04::shape,
-        autobot::sim::dynamics::revolute_joint{.rotation_axis = Eigen::Vector3d::UnitZ()},
-        Eigen::Isometry3d::Identity(),
-        autobot::sim::dynamics::ligament_aspect::all);*/
-
+    autobot::devices::hcsr04<autobot::units::meters> hcsr04(1, 2);
     autobot::sim::devices::hcsr04 hcsr04_sim(1, 2);
+
+    auto robot1 = world.create_body("robot1");
     auto ultrasonic_joint = robot1.attach("ultrasonic", hcsr04_sim, autobot::sim::dynamics::revolute_joint{.rotation_axis = autobot::math::axis_z()});
-    auto echo_reader = autobot::hal::pulse_width_reader(autobot::hal::open_device(2, autobot::hal::type_pulsewidth_reader));
 
     auto robot2 = world.create_body("robot2");
-    //auto robot2_lig1 = robot2.weld("lig1", )
-
-    /*auto robot2_lig1 = robot1.attach("lig1",
+    robot2.attach("lig1",
         autobot::sim::dynamics::box_shape(0.45_m, 0.15_m, 0.2_m),
         autobot::sim::dynamics::weld_joint{},
-        autobot::sim::transform(1.0_m, 0.0_m, 0.0_m, 0.0_rad, 0.0_rad, 0.0_rad),
-        autobot::sim::dynamics::ligament_aspect::all);*/
+        autobot::math::transform3{1.0_m, 0.0_m, 0.0_m, 0.0_rad, 0.0_rad, 0.0_rad});
 
-    window.on_update([&window, &ultrasonic_joint, &hcsr04_sim, &echo_reader]()->void {
+    window.on_update([&window, &ultrasonic_joint, &hcsr04_sim, &hcsr04]()->void {
         if (window.get_key(GLFW_KEY_T) == GLFW_PRESS) {
             auto pos = ultrasonic_joint.get_position();
             pos += 1.0_deg;
@@ -137,8 +130,8 @@ int main() {
         if (window.get_key(GLFW_KEY_Y) == GLFW_PRESS) {
             hcsr04_sim.measure();
 
-            const auto length = echo_reader.read();
-            printf("LEN: at %u\n", length);
+            const auto length = hcsr04.read_distance();
+            printf("LEN: at %.3f\n", (length ? length.value().value() : 0));
         }
     }, 0.02);
 
