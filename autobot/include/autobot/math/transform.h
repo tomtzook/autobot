@@ -68,9 +68,9 @@ struct base_linear3 : public base_wrapped_vector<unit_, 3, base_linear3<unit_>> 
     [[nodiscard]] constexpr type x() const { return type(this->m_data[0]); }
     [[nodiscard]] constexpr type y() const { return type(this->m_data[1]); }
     [[nodiscard]] constexpr type z() const { return type(this->m_data[2]); }
-    constexpr void x(const type value) const { this->m_data[0] = value.value(); }
-    constexpr void y(const type value) const { this->m_data[1] = value.value(); }
-    constexpr void z(const type value) const { this->m_data[2] = value.value(); }
+    constexpr void x(const type value) { this->m_data[0] = value.value(); }
+    constexpr void y(const type value) { this->m_data[1] = value.value(); }
+    constexpr void z(const type value) { this->m_data[2] = value.value(); }
 };
 
 template<units::unit_or_measure_type unit_>

@@ -252,9 +252,18 @@ engine::ligament_holder& ligament::get_node() {
     return m_node.value();
 }
 
+const joint<free_joint>& body::get_joint() const {
+    return m_joint;
+}
+
+joint<free_joint>& body::get_joint() {
+    return m_joint;
+}
+
 body::body(engine::body_holder&& underlying)
     : ligament()
-    , m_underlying(std::move(underlying)) {
+    , m_underlying(std::move(underlying))
+    , m_joint(m_underlying.root_ligament) {
     attach(m_underlying.root_ligament);
 }
 

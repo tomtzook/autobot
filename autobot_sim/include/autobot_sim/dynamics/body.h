@@ -129,16 +129,19 @@ private:
     [[nodiscard]] const engine::ligament_holder& get_node() const;
     [[nodiscard]] engine::ligament_holder& get_node();
 
-    std::optional<engine::ligament_holder> m_node;
+    std::optional<engine::ligament_holder> m_node{};
 };
 
 class body : public ligament {
 public:
+    const joint<free_joint>& get_joint() const;
+    joint<free_joint>& get_joint();
 
 private:
     explicit body(engine::body_holder&& underlying);
 
     engine::body_holder m_underlying;
+    joint<free_joint> m_joint;
 
     friend class world;
 };

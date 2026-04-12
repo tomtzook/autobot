@@ -222,62 +222,62 @@ struct joint_info<free_joint> {
     }
 
     static Eigen::Vector3d get_linear_position(const type* joint) {
-        return joint->getPositions().segment<3>(0);
+        return joint->getPositions().segment<3>(3);
     }
 
     static void set_linear_position(type* joint, const Eigen::Vector3d& value) {
         auto data = joint->getPositions();
-        data.segment<3>(0) = value;
+        data.segment<3>(3) = value;
         joint->setPositions(data);
     }
 
     static Eigen::Vector3d get_linear_velocity(const type* joint) {
-        return joint->getVelocities().segment<3>(0);
+        return joint->getVelocities().segment<3>(3);
     }
 
     static void set_linear_velocity(type* joint, const Eigen::Vector3d& value) {
         auto data = joint->getVelocities();
-        data.segment<3>(0) = value;
+        data.segment<3>(3) = value;
         joint->setVelocities(data);
     }
 
     static Eigen::Vector3d get_linear_acceleration(const type* joint) {
-        return joint->getAccelerations().segment<3>(0);
+        return joint->getAccelerations().segment<3>(3);
     }
 
     static void set_linear_acceleration(type* joint, const Eigen::Vector3d& value) {
         auto data = joint->getAccelerations();
-        data.segment<3>(0) = value;
+        data.segment<3>(3) = value;
         joint->setAccelerations(data);
     }
 
     static Eigen::Vector3d get_angular_position(const type* joint) {
-        return joint->getPositions().segment<3>(3);
+        return joint->getPositions().segment<3>(0);
     }
 
     static void set_angular_position(type* joint, const Eigen::Vector3d& value) {
         auto data = joint->getPositions();
-        data.segment<3>(3) = value;
+        data.segment<3>(0) = value;
         joint->setPositions(data);
     }
 
     static Eigen::Vector3d get_angular_velocity(const type* joint) {
-        return joint->getVelocities().segment<3>(3);
+        return joint->getVelocities().segment<3>(0);
     }
 
     static void set_angular_velocity(type* joint, const Eigen::Vector3d& value) {
         auto data = joint->getVelocities();
-        data.segment<3>(3) = value;
+        data.segment<3>(0) = value;
         joint->setVelocities(data);
     }
 
     static Eigen::Vector3d get_angular_acceleration(const type* joint) {
-        return joint->getAccelerations().segment<3>(3);
+        return joint->getAccelerations().segment<3>(0);
     }
 
     static void set_angular_acceleration(type* joint, const Eigen::Vector3d& value) {
         auto data = joint->getAccelerations();
-        data.segment<3>(3) = value;
+        data.segment<3>(0) = value;
         joint->setAccelerations(data);
     }
 };

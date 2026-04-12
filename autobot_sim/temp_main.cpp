@@ -116,7 +116,7 @@ int main() {
         autobot::sim::dynamics::weld_joint{},
         autobot::math::transform3{1.0_m, 0.0_m, 0.0_m, 0.0_rad, 0.0_rad, 0.0_rad});
 
-    window.on_update([&window, &ultrasonic_joint, &hcsr04_sim, &hcsr04]()->void {
+    window.on_update([&window, &ultrasonic_joint, &hcsr04_sim, &hcsr04, &robot1]()->void {
         if (window.get_key(GLFW_KEY_T) == GLFW_PRESS) {
             auto pos = ultrasonic_joint.get_position();
             pos += 1.0_deg;
@@ -126,6 +126,11 @@ int main() {
             auto pos = ultrasonic_joint.get_position();
             pos -= 1.0_deg;
             ultrasonic_joint.set_position(pos);
+        }
+        if (window.get_key(GLFW_KEY_U) == GLFW_PRESS) {
+            auto pos = robot1.get_joint().get_translation();
+            pos.x(pos.x() += 0.3_m);
+            robot1.get_joint().set_translation(pos);
         }
         if (window.get_key(GLFW_KEY_Y) == GLFW_PRESS) {
             hcsr04_sim.measure();
