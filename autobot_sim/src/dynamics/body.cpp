@@ -36,6 +36,10 @@ void joint<revolute_joint>::set_acceleration(const units::radians_per_second_squ
     joint_info::set_acceleration(m_underlying, joint_info::vector{value.value()});
 }
 
+void joint<revolute_joint>::set_command(const units::newton_meter value) {
+    joint_info::set_command(m_underlying, joint_info::vector{value.value()});
+}
+
 joint<prismatic_joint>::joint(const raw_type& underlying)
     : base_joint<prismatic_joint>(underlying)
 {}

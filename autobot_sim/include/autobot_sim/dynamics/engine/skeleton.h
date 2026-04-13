@@ -1,6 +1,5 @@
 #pragma once
 
-#include "autobot_sim/dynamics/engine/base.h"
 #include "autobot_sim/dynamics/engine/world.h"
 
 namespace autobot::sim::dynamics::engine {
@@ -88,6 +87,7 @@ struct joint_info<revolute_joint> {
     static void set_velocity(const ligament_holder_ptr& ptr, const vector& value);
     static vector get_acceleration(const ligament_holder_ptr& ptr);
     static void set_acceleration(const ligament_holder_ptr& ptr, const vector& value);
+    static void set_command(const ligament_holder_ptr& ptr, const vector& value);
 };
 
 template<>
@@ -100,6 +100,7 @@ struct joint_info<prismatic_joint> {
     static void set_velocity(const ligament_holder_ptr& ptr, const vector& value);
     static vector get_acceleration(const ligament_holder_ptr& ptr);
     static void set_acceleration(const ligament_holder_ptr& ptr, const vector& value);
+    static void set_command(const ligament_holder_ptr& ptr, const vector& value);
 };
 
 template<>
@@ -112,6 +113,7 @@ struct joint_info<ball_joint> {
     static void set_velocity(const ligament_holder_ptr& ptr, const vector& value);
     static vector get_acceleration(const ligament_holder_ptr& ptr);
     static void set_acceleration(const ligament_holder_ptr& ptr, const vector& value);
+    static void set_command(const ligament_holder_ptr& ptr, const vector& value);
 };
 
 template<>
@@ -124,6 +126,7 @@ struct joint_info<free_joint> {
     static void set_velocity(const ligament_holder_ptr& ptr, const vector& value);
     static vector get_acceleration(const ligament_holder_ptr& ptr);
     static void set_acceleration(const ligament_holder_ptr& ptr, const vector& value);
+    static void set_command(const ligament_holder_ptr& ptr, const vector& value);
 };
 
 

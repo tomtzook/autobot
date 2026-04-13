@@ -3,7 +3,7 @@
 #include <functional>
 #include <Eigen/Dense>
 
-#include "autobot_sim/dynamics/engine/base.h"
+#include "autobot_sim/dynamics/data.h"
 
 namespace autobot::sim::dynamics::engine {
 

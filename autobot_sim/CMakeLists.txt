@@ -14,6 +14,8 @@ add_library(autobot_sim STATIC
         src/dynamics/engine/skeleton.cpp
         src/dynamics/engine/info.h
         src/dynamics/engine/holders.h
+        include/autobot_sim/devices/dc_motor.h
+        src/devices/dc_motor.cpp
 )
 target_include_directories(autobot_sim
         PUBLIC

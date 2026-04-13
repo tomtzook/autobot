@@ -69,12 +69,23 @@ template<typename t_>
 concept shape_type = std::is_same_v<t_, empty_shape> || std::is_same_v<t_, box_shape> || std::is_same_v<t_, sphere_shape> ||
     std::is_same_v<t_, cylinder_shape> || std::is_same_v<t_, ellipsoid_shape>;
 
+enum class actuator_type {
+    none,
+    force
+};
+
 struct weld_joint {
 
 };
 
 struct revolute_joint {
+    constexpr explicit revolute_joint(const math::axis3& rotation_axis, const actuator_type actuator = actuator_type::none)
+        : rotation_axis(rotation_axis)
+        , actuator(actuator)
+    {}
+
     math::axis3 rotation_axis;
+    actuator_type actuator;
 };
 
 struct prismatic_joint {

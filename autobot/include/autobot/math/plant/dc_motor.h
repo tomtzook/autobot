@@ -26,6 +26,7 @@ struct dc_motor {
     [[nodiscard]] constexpr dc_motor times(size_t count) const;
     [[nodiscard]] constexpr units::volts_per_rad_per_sec kv(floating_type gearing) const;
     [[nodiscard]] constexpr units::volts_per_rad_per_second_squared ka(floating_type gearing, units::jkg_meters_squared moment_of_inertia) const;
+    [[nodiscard]] constexpr units::newton_meter torque(floating_type gearing, units::volts voltage, units::radians_per_second velocity) const;
 };
 
 class dc_motor_system : public state_spaced_system<floating_type, 0, 1, 2, 2> {
@@ -76,6 +77,12 @@ constexpr units::volts_per_rad_per_sec dc_motor::kv(const floating_type gearing)
 
 constexpr units::volts_per_rad_per_second_squared dc_motor::ka(const floating_type gearing, const units::jkg_meters_squared moment_of_inertia) const {
     return units::volts_per_rad_per_second_squared((resistence.value() * moment_of_inertia.value()) / (gearing * motor_kt.value()));
+}
+
+constexpr units::newton_meter dc_motor::torque(const floating_type gearing, const units::volts voltage, const units::radians_per_second velocity) const {
+    const auto back_emf = motor_kt.value() * velocity.value() / gearing;
+    const auto current = (voltage.value() - back_emf) / resistence.value();
+    return units::newton_meter(motor_kt.value() * current * gearing);
 }
 
 }

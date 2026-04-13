@@ -2,6 +2,7 @@
 
 #include <autobot/math/transform.h>
 
+#include "autobot_sim/dynamics/data.h"
 #include "autobot_sim/dynamics/engine/skeleton.h"
 #include "autobot_sim/dynamics/engine/world.h"
 #include "autobot_sim/dynamics/engine/raycast.h"
@@ -40,6 +41,8 @@ public:
     void set_velocity(units::radians_per_second value);
     [[nodiscard]] units::radians_per_second_squared get_acceleration() const;
     void set_acceleration(units::radians_per_second_squared value);
+
+    void set_command(units::newton_meter value);
 };
 
 template<>

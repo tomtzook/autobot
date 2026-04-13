@@ -18,6 +18,7 @@
 
 #include "autobot_sim/dynamics/body.h"
 #include "autobot_sim/devices/hcsr04.h"
+#include "autobot_sim/devices/dc_motor.h"
 
 
 static std::optional<glui::mesh> g_cube_mesh;
@@ -60,7 +61,60 @@ int main() {
     }, 0.02);
 
     autobot::sim::dynamics::world world;
-    window.on_update([&world]()->void {
+
+    autobot::hal::initialize(autobot::hal::sim::initialize);
+    autobot::hal::sim::define(1, "trig", autobot::hal::type_port_digital_output);
+    autobot::hal::sim::define_value(1, autobot::hal::value_digital_io_signal, "iosig", autobot::hal::type_port_digital_output, autobot::hal::data_type::unsigned_32bit, autobot::hal::data_permission::readwrite, autobot::hal::value_capabilities::pulse);
+    autobot::hal::sim::define(2, "echo", autobot::hal::type_pulsewidth_reader);
+    autobot::hal::sim::define_value(2, autobot::hal::value_pulsewidth_length, "pulse", autobot::hal::type_pulsewidth_reader, autobot::hal::data_type::unsigned_32bit, autobot::hal::data_permission::readonly);
+
+    autobot::devices::hcsr04<autobot::units::meters> hcsr04(1, 2);
+    autobot::sim::devices::hcsr04 hcsr04_sim(1, 2);
+
+    auto robot1 = world.create_body("robot1");
+    auto ultrasonic_joint = robot1.attach("ultrasonic", hcsr04_sim, autobot::sim::dynamics::revolute_joint(autobot::math::axis_z(), autobot::sim::dynamics::actuator_type::force));
+
+    autobot::math::dc_motor motor{
+        12.0_volt,
+        2.6_ntm,
+        105.0_amp,
+        1.8_amp,
+        594.38933_rad_per_s};
+    autobot::sim::devices::dc_motor motor_sim(motor, 1, ultrasonic_joint);
+    motor_sim.set(1.0_volt);
+
+    auto robot2 = world.create_body("robot2");
+    robot2.attach("lig1",
+        autobot::sim::dynamics::box_shape(0.45_m, 0.15_m, 0.2_m),
+        autobot::sim::dynamics::weld_joint{},
+        autobot::math::transform3{1.0_m, 0.0_m, 0.0_m, 0.0_rad, 0.0_rad, 0.0_rad});
+
+    window.on_update([&window, &ultrasonic_joint, &hcsr04_sim, &hcsr04, &robot1]()->void {
+        if (window.get_key(GLFW_KEY_T) == GLFW_PRESS) {
+            auto pos = ultrasonic_joint.get_position();
+            pos += 1.0_deg;
+            ultrasonic_joint.set_position(pos);
+        }
+        if (window.get_key(GLFW_KEY_R) == GLFW_PRESS) {
+            auto pos = ultrasonic_joint.get_position();
+            pos -= 1.0_deg;
+            ultrasonic_joint.set_position(pos);
+        }
+        if (window.get_key(GLFW_KEY_U) == GLFW_PRESS) {
+            auto pos = robot1.get_joint().get_translation();
+            pos.x(pos.x() += 0.3_m);
+            robot1.get_joint().set_translation(pos);
+        }
+        if (window.get_key(GLFW_KEY_Y) == GLFW_PRESS) {
+            hcsr04_sim.measure();
+
+            const auto length = hcsr04.read_distance();
+            printf("LEN: at %.3f\n", (length ? length.value().value() : 0));
+        }
+    }, 0.02);
+
+    window.on_update([&world, &motor_sim]()->void {
+        motor_sim.update();
         world.step();
     }, 0.001);
     window.on_render([&renderer, &world, &camera]()->void {
@@ -97,48 +151,6 @@ int main() {
             render_context.render(glm::make_mat4(model_matrix.data()), *mesh_ptr);
         });
     });
-
-    autobot::hal::initialize(autobot::hal::sim::initialize);
-    autobot::hal::sim::define(1, "trig", autobot::hal::type_port_digital_output);
-    autobot::hal::sim::define_value(1, autobot::hal::value_digital_io_signal, "iosig", autobot::hal::type_port_digital_output, autobot::hal::data_type::unsigned_32bit, autobot::hal::data_permission::readwrite, autobot::hal::value_capabilities::pulse);
-    autobot::hal::sim::define(2, "echo", autobot::hal::type_pulsewidth_reader);
-    autobot::hal::sim::define_value(2, autobot::hal::value_pulsewidth_length, "pulse", autobot::hal::type_pulsewidth_reader, autobot::hal::data_type::unsigned_32bit, autobot::hal::data_permission::readonly);
-
-    autobot::devices::hcsr04<autobot::units::meters> hcsr04(1, 2);
-    autobot::sim::devices::hcsr04 hcsr04_sim(1, 2);
-
-    auto robot1 = world.create_body("robot1");
-    auto ultrasonic_joint = robot1.attach("ultrasonic", hcsr04_sim, autobot::sim::dynamics::revolute_joint{.rotation_axis = autobot::math::axis_z()});
-
-    auto robot2 = world.create_body("robot2");
-    robot2.attach("lig1",
-        autobot::sim::dynamics::box_shape(0.45_m, 0.15_m, 0.2_m),
-        autobot::sim::dynamics::weld_joint{},
-        autobot::math::transform3{1.0_m, 0.0_m, 0.0_m, 0.0_rad, 0.0_rad, 0.0_rad});
-
-    window.on_update([&window, &ultrasonic_joint, &hcsr04_sim, &hcsr04, &robot1]()->void {
-        if (window.get_key(GLFW_KEY_T) == GLFW_PRESS) {
-            auto pos = ultrasonic_joint.get_position();
-            pos += 1.0_deg;
-            ultrasonic_joint.set_position(pos);
-        }
-        if (window.get_key(GLFW_KEY_R) == GLFW_PRESS) {
-            auto pos = ultrasonic_joint.get_position();
-            pos -= 1.0_deg;
-            ultrasonic_joint.set_position(pos);
-        }
-        if (window.get_key(GLFW_KEY_U) == GLFW_PRESS) {
-            auto pos = robot1.get_joint().get_translation();
-            pos.x(pos.x() += 0.3_m);
-            robot1.get_joint().set_translation(pos);
-        }
-        if (window.get_key(GLFW_KEY_Y) == GLFW_PRESS) {
-            hcsr04_sim.measure();
-
-            const auto length = hcsr04.read_distance();
-            printf("LEN: at %.3f\n", (length ? length.value().value() : 0));
-        }
-    }, 0.02);
 
     while (window.iterate()) {}
 

@@ -72,6 +72,17 @@ struct dart_joint_info<revolute_joint> {
     static props create_props(const revolute_joint& joint) {
         props props;
         props.mAxis = joint.rotation_axis.raw();
+
+        switch (joint.actuator) {
+            case actuator_type::force:
+                props.mActuatorType = dart::dynamics::detail::FORCE;
+                break;
+            case actuator_type::none:
+            default:
+                props.mActuatorType = dart::dynamics::detail::PASSIVE;
+                break;
+        }
+
         return props;
     }
 };

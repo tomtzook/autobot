@@ -254,6 +254,12 @@ void joint_set_acceleration(const ligament_holder_ptr& ptr, const typename joint
     return ligament.joint->setAccelerationsStatic(value);
 }
 
+template<joint_type joint_t_>
+void joint_set_command(const ligament_holder_ptr& ptr, const typename joint_info<joint_t_>::vector& value) {
+    auto& ligament = holder_joint<joint_t_>(ptr);
+    return ligament.joint->setCommands(value);
+}
+
 #define joint_info_getters_settings(joint_type) \
     joint_info<joint_type>::vector joint_info<joint_type>::get_position(const ligament_holder_ptr& ptr) { return joint_get_position<joint_type>(ptr); } \
     void joint_info<joint_type>::set_position(const ligament_holder_ptr& ptr, const vector& value) { joint_set_position<joint_type>(ptr, value); } \
@@ -261,6 +267,8 @@ void joint_set_acceleration(const ligament_holder_ptr& ptr, const typename joint
     void joint_info<joint_type>::set_velocity(const ligament_holder_ptr& ptr, const vector& value) { joint_set_velocity<joint_type>(ptr, value); } \
     joint_info<joint_type>::vector joint_info<joint_type>::get_acceleration(const ligament_holder_ptr& ptr) { return joint_get_acceleration<joint_type>(ptr); } \
     void joint_info<joint_type>::set_acceleration(const ligament_holder_ptr& ptr, const vector& value) { joint_set_acceleration<joint_type>(ptr, value); } \
+    void joint_info<joint_type>::set_command(const ligament_holder_ptr& ptr, const vector& value) { joint_set_command<joint_type>(ptr, value); }
+
 
 joint_info_getters_settings(revolute_joint);
 joint_info_getters_settings(prismatic_joint);
